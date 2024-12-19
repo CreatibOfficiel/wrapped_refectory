@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Refectory Year Wrap 2024</title>
+    <!-- Import Google Fonts si nécessaire -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="output.css" rel="stylesheet">
+</head>
+<body class="m-0 p-0 font-open-sans bg-[#F5F3EE] text-gray-800 h-screen overflow-hidden">
+
+    <div id="story-container" class="relative w-full h-full flex flex-col justify-center items-center overflow-hidden p-5 box-border">
+        <!-- Barre de progression -->
+        <div class="absolute top-0 left-0 w-full h-1 bg-gray-300">
+            <div id="progress-bar" class="h-full bg-green-600 w-0 transition-all duration-500 ease-linear"></div>
+        </div>
+
+        <!-- Slides -->
+        <div id="slides-container" class="relative w-full text-center p-5 box-border"></div>
+
+        <!-- Navigation -->
+        <div id="nav-buttons" class="absolute bottom-5 flex space-x-2">
+            <button id="prev-button" class="bg-white bg-opacity-80 text-gray-800 border-none py-2 px-4 rounded-full cursor-pointer transition-colors duration-300 hover:bg-opacity-100">Précédent</button>
+            <button id="next-button" class="bg-white bg-opacity-80 text-gray-800 border-none py-2 px-4 rounded-full cursor-pointer transition-colors duration-300 hover:bg-opacity-100">Suivant</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
