@@ -44,6 +44,7 @@ function calculateYearData(orders) {
     const discountSaved = calculateTotalDiscountSaved(orders);
     const averageDeliveryHour = calculateAverageDeliveryHour(orders, totalOrders);
     const { topMonth, topMonthCount } = calculateTopMonth(orders);
+    const averageOrderPosition = calculateAverageOrderPosition(orders);
 
     return {
         totalOrders,
@@ -57,7 +58,8 @@ function calculateYearData(orders) {
         discountSaved,
         averageDeliveryHour,
         topMonth,
-        topMonthCount
+        topMonthCount,
+        averageOrderPosition
     };
 }
 
@@ -126,6 +128,17 @@ function calculateFavoriteDessert(orders) {
  */
 function calculateDessertsOrdersCount(orders) {
     return orders.filter(order => order.products.length > 1).length;
+}
+
+/**
+ * Calcule le classement moyen des commandes sur l'année.
+ * @param {Array} orders - Tableau d'objets commande.
+ * @returns {number} - Classement moyen.
+ */
+function calculateAverageOrderPosition(orders) {
+    if (orders.length === 0) return 0;
+    const totalPosition = orders.reduce((sum, order) => sum + (order.orderPosition || 0), 0);
+    return totalPosition / orders.length;
 }
 
 /**
@@ -250,6 +263,10 @@ function generateSlides(yearData) {
             text: `Le mois où vous avez passé le plus de commandes est <span class="text-4xl font-bold text-green-600">${yearData.topMonth}</span> avec <span class="text-4xl font-bold text-green-600">${yearData.topMonthCount}</span> commandes.<br>On dirait que ce mois est votre préféré pour régaler vos papilles !`
         },
         {
+            isAverageOrderPosition: true,
+            averageOrderPosition: yearData.averageOrderPosition
+        },
+        {
             isDessertOrdersCount: true,
             dessertOrdersCount: yearData.dessertsOrdersCount
         },
@@ -296,6 +313,8 @@ function initializeSlideshow(slides) {
             renderCombinedSlide(slide);
         } else if (slide.isFavoriteDessert) {
             renderFavoriteDessertSlide(slide);
+        } else if (slide.isAverageOrderPosition) {
+            renderAverageOrderPositionSlide(slide);
         } else {
             renderStandardSlide(slide);
         }
@@ -380,6 +399,19 @@ function initializeSlideshow(slides) {
             <p class="mt-4 text-lg">On peut dire que ${slide.favoriteDessert.title} a fait sensation, qui a besoin de crème brûlée quand on a ça ? 🍨✨</p>
         `;
         slidesContainer.appendChild(dessertElement);
+        updateNavigation();
+    }
+
+    function renderAverageOrderPositionSlide(slide) {
+        const averagePositionElement = document.createElement('div');
+        averagePositionElement.classList.add('flex', 'flex-col', 'items-center');
+        averagePositionElement.innerHTML = `
+            <p class="text-lg">
+                Vous êtes en moyenne le <span class="text-4xl font-bold text-green-600">${Math.round(slide.averageOrderPosition)}</span>${Math.round(slide.averageOrderPosition) > 1 ? 'ème' : 'er'} à commander sur votre lieu de livraison chaque jour.<br>
+                Continuez ainsi pour grimper dans les classements culinaires ! 🏆🍽️
+            </p>
+        `;
+        slidesContainer.appendChild(averagePositionElement);
         updateNavigation();
     }
 

@@ -44,9 +44,9 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       // Détails commande
-      const ascanInfo = order.ascan
-        ? `<p><span class="font-semibold">ASCAN :</span> ${order.ascan}</p>`
-        : `<p><span class="font-semibold">ASCAN :</span> Non spécifié</p>`;
+      const orderPosition = order.orderPosition
+        ? `<span class="font-semibold">${order.orderPosition}</span>`
+        : `<p>Non spécifié</p>`;
 
       // Détails livraison
       const deliveryInfo = order.delivery
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <!-- Informations commande -->
         <div class="border-b pb-4 mb-4">
           <h2 class="text-xl font-semibold mb-2 text-gray-800">Informations Commande</h2>
-          ${ascanInfo}
+          Commande n°${orderPosition} du jour
           ${promoCode}
           ${pointsInfo}
         </div>

@@ -193,7 +193,6 @@
     const { isEnglish, isFrench } = detectLanguageFromDay(textContent);
 
     let fullDate = null;
-    let day, month, year, hour, minute;
 
     if (
       textContent.toLowerCase().startsWith("today") ||
@@ -344,13 +343,18 @@
     }
 
     const isSuccess = orderCard.classList.contains("c-order-card--success");
-    const ascanSection = orderCard.querySelector(".c-order-card__top");
-    let ascan = null;
-    if (ascanSection) {
-      const ascanMatch = ascanSection.textContent.match(/ASCAN\s(\d+)/);
-      if (ascanMatch) {
-        ascan = `ASCAN ${ascanMatch[1]}`;
+    // Récupère la section contenant la position de la commande du jour
+    const positionSection = orderCard.querySelector(".c-order-card__top");
+    let orderPosition = null;
+
+    if (positionSection) {
+      // Utilise un regex pour capturer uniquement le nombre à la fin de la chaîne
+      const positionMatch = positionSection.textContent.trim().match(/(\d+)$/);
+      if (positionMatch) {
+        orderPosition = parseInt(positionMatch[1], 10); // Position dans les commandes du jour
       }
+    } else {
+      console.warn("Aucune section de position trouvée pour cette commande.");
     }
 
     // Parse produits
@@ -385,7 +389,7 @@
       month,
       year,
       fullDate,
-      ascan,
+      orderPosition,
       hour,
       promo_code,
       products,
@@ -474,35 +478,32 @@
   /**
    * Traite toutes les commandes, en cliquant sur "Afficher plus" jusqu'à ne plus en avoir
    * ou jusqu'à détecter une année précédente.
+   * @returns {Promise<Array>} Liste des commandes récupérées.
    */
   async function processAllOrders() {
-    const currentYear = new Date().getFullYear();
-
+    // const currentYear = new Date().getFullYear();
+    const currentYear = 2024;
     let allOrders = [];
     let keepLoading = true;
     let lastProcessedDate = null;
     let sameDateCount = 0;
+    let isFetching = true; // Flag local pour arrêter le processus si nécessaire
 
-    while (keepLoading) {
+    while (keepLoading && isFetching) {
       console.log("Analyse des commandes affichées...");
-      const { orders, foundOldYear, currentLastDate } =
-        parseOrders(currentYear);
+      const { orders, foundOldYear, currentLastDate } = parseOrders(currentYear);
 
       if (foundOldYear) {
-        console.log(
-          "Commandes d'une année précédente détectées, arrêt du chargement."
-        );
+        console.log("Commandes d'une année précédente détectées, arrêt du chargement.");
         allOrders = [...allOrders, ...orders]; // Ajout des dernières commandes avant arrêt
         break;
       }
 
       if (currentLastDate === lastProcessedDate) {
-        // On est bloqué sur la même date => potentielle absence de nouvelles commandes
+        // On est bloqué sur la même date => absence potentielle de nouvelles commandes
         sameDateCount++;
         if (sameDateCount >= 5) {
-          console.log(
-            "La même date de commande a été rencontrée 5 fois consécutivement, arrêt."
-          );
+          console.log("La même date de commande a été rencontrée 5 fois consécutivement, arrêt.");
           break;
         }
         console.log("Même date rencontrée, saut de l'analyse.");
@@ -511,18 +512,41 @@
         lastProcessedDate = currentLastDate;
         allOrders = [...allOrders, ...orders];
         console.log(`Commandes récupérées : ${orders.length}`);
+
+        // Envoyer une mise à jour pour chaque lot de commandes récupérées
+        chrome.runtime.sendMessage({ action: 'updateOrderCount', count: allOrders.length });
       }
 
       keepLoading = await clickShowMore();
     }
 
+    // Indique que l'analyse est terminée
+    chrome.runtime.sendMessage({ action: 'fetchingCompleted' });
+
     console.log("Analyse terminée, envoi des données...");
     console.log("Total des commandes récupérées :", allOrders);
 
-    chrome.runtime.sendMessage({ action: "storeOrders", data: allOrders });
-    chrome.runtime.sendMessage({ action: "openResultsPage" });
-    chrome.runtime.sendMessage({ action: "refreshPage" });
+    return allOrders;
   }
 
-  processAllOrders();
+  /**
+   * Listener pour les messages du background script
+   */
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "getOrders") {
+      // Exécuter le processus de récupération des commandes
+      processAllOrders()
+        .then((orders) => {
+          sendResponse({ data: orders });
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la récupération des commandes :", error);
+          sendResponse({ data: [], error: error.message });
+        });
+
+      // Indique que la réponse sera envoyée de manière asynchrone
+      return true;
+    }
+  });
+
 })();
