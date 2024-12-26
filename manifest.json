@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Wrapped 2024 sur Refectory",
-  "version": "1.2",
+  "version": "1.0",
   "description": "Redécouvrez votre année 2024 sur Refectory",
-  "permissions": ["scripting", "activeTab"],
+  "permissions": ["activeTab", "storage"],
   "host_permissions": [
     "https://www.refectory.fr/en/account/orders",
     "https://www.refectory.fr/mon-compte/mes-commandes"

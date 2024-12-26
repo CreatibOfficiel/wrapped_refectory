@@ -251,29 +251,46 @@
       total_due: null,
       discounts: [],
     };
-  
-    const totalSections = orderCard.querySelectorAll(".c-order-detail-totals__section");
+
+    const totalSections = orderCard.querySelectorAll(
+      ".c-order-detail-totals__section"
+    );
     totalSections.forEach((section) => {
       const totalItems = section.querySelectorAll(".c-order-detail-total-item");
       totalItems.forEach((item) => {
-        const labelElem = item.querySelector(".c-order-detail-total-item__label");
-        const label = labelElem ? labelElem.innerText.trim().toLowerCase() : null;
-        const priceElem = item.querySelector(".c-order-detail-total-item__price");
+        const labelElem = item.querySelector(
+          ".c-order-detail-total-item__label"
+        );
+        const label = labelElem
+          ? labelElem.innerText.trim().toLowerCase()
+          : null;
+        const priceElem = item.querySelector(
+          ".c-order-detail-total-item__price"
+        );
         const priceText = priceElem ? priceElem.innerText.trim() : null;
-  
+
         if (priceText) {
           // On parse le prix
           const parsedPrice = parsePrice(priceText);
-  
+
           // Vérification en fonction du label
           if (label) {
             if (label.includes("livraison")) {
               totals.delivery = priceText;
-            } else if (label.includes("points fidélité") || label.includes("loyalty points")) {
+            } else if (
+              label.includes("points fidélité") ||
+              label.includes("loyalty points")
+            ) {
               totals.points_fidelity = priceText;
-            } else if (label.includes("total à payer") || label.includes("total")) {
+            } else if (
+              label.includes("total à payer") ||
+              label.includes("total")
+            ) {
               totals.total_due = parsedPrice;
-            } else if (label.includes("réduction") || label.includes("discount")) {
+            } else if (
+              label.includes("réduction") ||
+              label.includes("discount")
+            ) {
               if (parsedPrice < 0) {
                 totals.discounts.push(parsedPrice);
               }
@@ -292,9 +309,9 @@
         }
       });
     });
-  
+
     return totals;
-  }  
+  }
 
   /**
    * Extrait le code promo d'une commande si présent.
@@ -302,7 +319,9 @@
    * @returns {string|null}
    */
   function parsePromoCode(orderCard) {
-    const promoSection = orderCard.querySelector(".c-order-detail-totals__section-title");
+    const promoSection = orderCard.querySelector(
+      ".c-order-detail-totals__section-title"
+    );
     if (promoSection) {
       // Récupère le texte à l'intérieur de la section promo
       const promoCode = promoSection.innerText.trim();
@@ -491,10 +510,13 @@
 
     while (keepLoading && isFetching) {
       console.log("Analyse des commandes affichées...");
-      const { orders, foundOldYear, currentLastDate } = parseOrders(currentYear);
+      const { orders, foundOldYear, currentLastDate } =
+        parseOrders(currentYear);
 
       if (foundOldYear) {
-        console.log("Commandes d'une année précédente détectées, arrêt du chargement.");
+        console.log(
+          "Commandes d'une année précédente détectées, arrêt du chargement."
+        );
         allOrders = [...allOrders, ...orders]; // Ajout des dernières commandes avant arrêt
         break;
       }
@@ -503,7 +525,9 @@
         // On est bloqué sur la même date => absence potentielle de nouvelles commandes
         sameDateCount++;
         if (sameDateCount >= 5) {
-          console.log("La même date de commande a été rencontrée 5 fois consécutivement, arrêt.");
+          console.log(
+            "La même date de commande a été rencontrée 5 fois consécutivement, arrêt."
+          );
           break;
         }
         console.log("Même date rencontrée, saut de l'analyse.");
@@ -514,14 +538,17 @@
         console.log(`Commandes récupérées : ${orders.length}`);
 
         // Envoyer une mise à jour pour chaque lot de commandes récupérées
-        chrome.runtime.sendMessage({ action: 'updateOrderCount', count: allOrders.length });
+        chrome.runtime.sendMessage({
+          action: "updateOrderCount",
+          count: allOrders.length,
+        });
       }
 
       keepLoading = await clickShowMore();
     }
 
     // Indique que l'analyse est terminée
-    chrome.runtime.sendMessage({ action: 'fetchingCompleted' });
+    chrome.runtime.sendMessage({ action: "fetchingCompleted" });
 
     console.log("Analyse terminée, envoi des données...");
     console.log("Total des commandes récupérées :", allOrders);
@@ -540,7 +567,10 @@
           sendResponse({ data: orders });
         })
         .catch((error) => {
-          console.error("Erreur lors de la récupération des commandes :", error);
+          console.error(
+            "Erreur lors de la récupération des commandes :",
+            error
+          );
           sendResponse({ data: [], error: error.message });
         });
 
@@ -548,5 +578,4 @@
       return true;
     }
   });
-
 })();

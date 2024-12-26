@@ -1,48 +1,186 @@
-let extractedOrders = []; // Variable pour stocker les commandes extraites
-let isFetching = false; // Indicateur de l'état de récupération
-let fetchedOrdersCount = 0; // Compteur des commandes récupérées
-let analysedTabId = null; // ID de l'onglet analysé
+let extractedOrders = [];
+let isFetching = false;
+let fetchedOrdersCount = 0;
+let analysedTabId = null;
 
-console.log("Background script chargé !");
+console.log("Background script loaded!");
 
-// Écouter les messages venant de content.js ou popup.js
+// -------------------------------------------
+// 1) Initialiser l'état depuis sessionStorage
+// -------------------------------------------
+initializeStateFromSessionStorage();
+
+/**
+ * Initialise les variables globales à partir de chrome.storage.session
+ * afin d'éviter que l'état ne soit perdu si le service worker s'est endormi.
+ */
+function initializeStateFromSessionStorage() {
+  chrome.storage.session.get(
+    ["extractedOrders", "isFetching", "fetchedOrdersCount", "analysedTabId"],
+    (data) => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          "Erreur lors de la lecture de session storage :",
+          chrome.runtime.lastError
+        );
+      }
+      extractedOrders = data.extractedOrders || [];
+      isFetching = data.isFetching || false;
+      fetchedOrdersCount = data.fetchedOrdersCount || 0;
+      analysedTabId = data.analysedTabId || null;
+
+      console.log("État initial récupéré de session storage :", {
+        extractedOrders,
+        isFetching,
+        fetchedOrdersCount,
+        analysedTabId,
+      });
+    }
+  );
+}
+
+/**
+ * Met à jour l'état "isFetching" dans chrome.storage.session et dans la variable locale.
+ * @param {boolean} state
+ */
+function setFetchingState(state) {
+  isFetching = state;
+  chrome.storage.session.set({ isFetching: state }, () => {
+    if (chrome.runtime.lastError) {
+      console.error(
+        `Erreur lors de l'écriture de isFetching : ${chrome.runtime.lastError}`
+      );
+    }
+    console.log("isFetching mis à jour :", state);
+  });
+}
+
+/**
+ * Met à jour le compteur de commandes dans chrome.storage.session et dans la variable locale.
+ * @param {number} count
+ */
+function updateOrderCount(count) {
+  fetchedOrdersCount = count;
+  // Stockage dans le session storage
+  chrome.storage.session.set({ fetchedOrdersCount: count }, () => {
+    if (chrome.runtime.lastError) {
+      console.error(
+        `Erreur lors de l'écriture de fetchedOrdersCount : ${chrome.runtime.lastError}`
+      );
+    }
+    console.log("fetchedOrdersCount mis à jour :", count);
+
+    // Notifier la popup de la mise à jour du compteur
+    sendMessageToPopup({ action: "updateOrderCount", count });
+  });
+}
+
+/**
+ * Stocker également l'ID de l'onglet analysé dans le session storage
+ * @param {number|null} tabId
+ */
+function updateAnalysedTabId(tabId) {
+  analysedTabId = tabId;
+  chrome.storage.session.set({ analysedTabId: tabId }, () => {
+    if (chrome.runtime.lastError) {
+      console.error(
+        `Erreur lors de l'écriture de analysedTabId : ${chrome.runtime.lastError}`
+      );
+    }
+    console.log("analysedTabId mis à jour :", tabId);
+  });
+}
+
+/**
+ * Met à jour la liste des commandes extraites
+ * @param {Array} orders
+ */
+function updateExtractedOrders(orders) {
+  extractedOrders = orders;
+  chrome.storage.session.set({ extractedOrders: orders }, () => {
+    if (chrome.runtime.lastError) {
+      console.error(
+        `Erreur lors de l'écriture de extractedOrders : ${chrome.runtime.lastError}`
+      );
+    }
+    console.log("extractedOrders mis à jour, taille =", orders.length);
+  });
+}
+
+// ---------------------------------------------------
+// 2) Fonctions pour communiquer avec la popup au besoin
+// ---------------------------------------------------
+function sendMessageToPopup(message) {
+  console.log("Envoi d'un message à la popup :", message);
+  chrome.runtime.sendMessage(message, (response) => {
+    if (chrome.runtime.lastError) {
+      // La popup n'est peut-être pas ouverte
+      console.log(
+        "Impossible d'envoyer le message à la popup :",
+        chrome.runtime.lastError.message
+      );
+    } else {
+      console.log("Message envoyé à la popup avec succès :", message);
+    }
+  });
+}
+
+// -------------------------------------------------------
+// 3) Gestion des messages entrants (content.js / popup.js)
+// -------------------------------------------------------
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("Message reçu :", message);
+
   switch (message.action) {
     case "updateOrderCount":
-      fetchedOrdersCount = message.count;
-      // Envoyer la mise à jour à la popup
-      chrome.runtime.sendMessage({ action: 'updateOrderCount', count: fetchedOrdersCount });
+      // Mise à jour du nombre de commandes
+      updateOrderCount(message.count);
       break;
 
     case "fetchingCompleted":
-      // Récupération terminée signalée par le content script
-      isFetching = false;
-      console.log("Récupération des commandes terminée (signalée par content).");
+      setFetchingState(false);
+      console.log("Fetching of orders completed (reported by content).");
 
-      // Ouvrir les deux onglets internes
-      chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/commands-extracted.html') });
-      chrome.tabs.create({ url: chrome.runtime.getURL('src/pages/index.html') });
-
+      // 1) Recharger l'onglet analysé s'il existe
       if (analysedTabId) {
+        console.log(`Reloading analysed tab with ID: ${analysedTabId}`);
         chrome.tabs.reload(analysedTabId);
       }
 
-      // Reset le nombre de commandes extraites
-      extractedOrders = [];
-      fetchedOrdersCount = 0;
+      // 2) Récupérer les commandes actuelles pour les transmettre aux nouvelles pages
+      const ordersData = extractedOrders.slice();
+
+      // 3) Ouvrir vos deux onglets internes
+      const urlsToOpen = [
+        chrome.runtime.getURL("src/pages/commands-extracted.html"),
+        chrome.runtime.getURL("src/pages/index.html"),
+      ];
+
+      urlsToOpen.forEach((url) => {
+        chrome.tabs.create({ url: url });
+      });
+
+      // 5) Réinitialiser extractedOrders, fetchedOrdersCount, etc.
+      updateExtractedOrders([]);
+      updateOrderCount(0);
+      updateAnalysedTabId(null);
+
+      // 6) Notifier la popup
+      sendMessageToPopup({ action: "fetchingCompleted" });
       break;
 
     case "startFetchingOrders":
       if (!isFetching) {
-        isFetching = true;
-        fetchedOrdersCount = 0;
-        extractedOrders = []; // Réinitialiser les commandes extraites
+        // On démarre la récupération
+        setFetchingState(true);
+        updateOrderCount(0);
+        updateExtractedOrders([]); // réinitialiser la liste
         console.log("Début de la récupération des commandes.");
 
-        // **Envoyer une réponse immédiatement avant de commencer le fetch**
+        // Envoyer une réponse immédiate avant le fetch
         sendResponse({ status: "Fetching started" });
 
-        // Lancer la récupération des commandes
+        // Lancer la récupération
         fetchOrders();
       } else {
         // Déjà en cours de récupération
@@ -51,93 +189,92 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
 
     case "getOrders":
-      // Retourne les commandes extraites depuis le background
+      // Retourne les commandes extraites
       sendResponse({ data: extractedOrders });
       break;
 
     case "isFetching":
-      // Interroger l'onglet actif pour vérifier l'autorisation
+      // Vérifier si l'URL active est autorisée
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         let isAuthorized = false;
         if (tabs.length > 0) {
           const tab = tabs[0];
           const allowedUrls = [
             "https://www.refectory.fr/en/account/orders",
-            "https://www.refectory.fr/mon-compte/mes-commandes"
+            "https://www.refectory.fr/mon-compte/mes-commandes",
           ];
-          isAuthorized = allowedUrls.some(url => tab.url.startsWith(url));
+          isAuthorized = allowedUrls.some((url) => tab.url.startsWith(url));
         }
         sendResponse({ isFetching, fetchedOrdersCount, isAuthorized });
       });
-      return true; // Indiquer que la réponse est asynchrone
-
-    default:
-      // Actions non gérées
-      break;
+      return true; // Réponse asynchrone
   }
 
-  return true; // Permet de répondre de manière asynchrone si nécessaire
+  return true; // Indique une réponse asynchrone potentielle
 });
 
 /**
- * Fonction pour récupérer les commandes depuis l'onglet actif.
- * Ici, on envoie le message "getOrders" au content script de l'onglet actif.
+ * Lance la récupération des commandes depuis l'onglet actif.
  */
 async function fetchOrders() {
   try {
-    // Obtenir l'onglet actif dans la fenêtre courante
-    let [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
+    let [activeTab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
     if (!activeTab) {
       console.error("Aucun onglet actif trouvé.");
-      isFetching = false;
-      chrome.runtime.sendMessage({ action: 'fetchingCompleted' });
+      setFetchingState(false);
+      chrome.runtime.sendMessage({ action: "fetchingCompleted" });
       return;
     }
 
     const tabUrl = activeTab.url;
     const allowedUrls = [
       "https://www.refectory.fr/en/account/orders",
-      "https://www.refectory.fr/mon-compte/mes-commandes"
+      "https://www.refectory.fr/mon-compte/mes-commandes",
     ];
 
-    if (!allowedUrls.some(url => tabUrl.startsWith(url))) {
-      console.error("L'onglet actif ne correspond pas aux URLs autorisées.");
-      isFetching = false;
-      chrome.runtime.sendMessage({ action: 'fetchingCompleted' });
+    const isAllowed = allowedUrls.some((url) => tabUrl.startsWith(url));
+    if (!isAllowed) {
+      console.error("L'onglet actif n'est pas sur une URL autorisée.");
+      setFetchingState(false);
+      chrome.runtime.sendMessage({ action: "fetchingCompleted" });
       return;
     }
 
-    console.log(`Onglet actif trouvé pour la récupération des commandes : ${activeTab.id}`);
-    analysedTabId = activeTab.id;
+    console.log(`Onglet actif pour la récupération : ${activeTab.id}`);
+    updateAnalysedTabId(activeTab.id);
 
-    // Envoyer un message au content script pour récupérer les commandes
-    chrome.tabs.sendMessage(activeTab.id, { action: 'getOrders' }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error(`Erreur lors de l'envoi du message au content script dans l'onglet ${activeTab.id} :`, chrome.runtime.lastError.message);
-        isFetching = false;
-        chrome.runtime.sendMessage({ action: 'fetchingCompleted' });
-        return;
+    // Envoyer un message au content script
+    chrome.tabs.sendMessage(
+      activeTab.id,
+      { action: "getOrders" },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error(
+            `Erreur lors de l'envoi du message au content script (tabId=${activeTab.id}) :`,
+            chrome.runtime.lastError.message
+          );
+          setFetchingState(false);
+          chrome.runtime.sendMessage({ action: "fetchingCompleted" });
+          return;
+        }
+
+        const orders = response?.data || [];
+        console.log(`Commandes récupérées : ${orders.length}`);
+
+        // Mettre à jour extractedOrders
+        if (orders.length > 0) {
+          const newOrderList = extractedOrders.concat(orders);
+          updateExtractedOrders(newOrderList);
+          updateOrderCount(fetchedOrdersCount + orders.length);
+        }
       }
-
-      const orders = response?.data || [];
-      console.log(`Commandes récupérées de l'onglet ${activeTab.id} : ${orders.length}`);
-
-      if (orders.length > 0) {
-        // Stocker les commandes
-        extractedOrders = extractedOrders.concat(orders);
-        fetchedOrdersCount += orders.length;
-
-        // Envoyer la mise à jour à la popup
-        chrome.runtime.sendMessage({ action: 'updateOrderCount', count: fetchedOrdersCount });
-      }
-
-      // Signal que la récupération est terminée
-      chrome.runtime.sendMessage({ action: 'fetchingCompleted' });
-    });
+    );
   } catch (error) {
     console.error("Erreur lors de la récupération des commandes :", error);
-    isFetching = false;
-    chrome.runtime.sendMessage({ action: 'fetchingCompleted' });
+    setFetchingState(false);
+    chrome.runtime.sendMessage({ action: "fetchingCompleted" });
   }
 }

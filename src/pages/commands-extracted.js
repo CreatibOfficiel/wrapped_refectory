@@ -6,28 +6,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const ordersData = response?.data || [];
 
     if (!ordersData.length) {
-      ordersContainer.innerHTML = "<p class='text-center text-gray-600'>Aucune commande trouvée.</p>";
+      ordersContainer.innerHTML =
+        "<p class='text-center text-gray-600'>Aucune commande trouvée.</p>";
       return;
     }
 
-    ordersData.forEach(order => {
+    ordersData.forEach((order) => {
       const orderElement = document.createElement("div");
-      orderElement.classList.add("bg-white", "shadow-md", "p-6", "rounded-lg", "space-y-4");
+      orderElement.classList.add(
+        "bg-white",
+        "shadow-md",
+        "p-6",
+        "rounded-lg",
+        "space-y-4"
+      );
 
       // Liste des produits
-      const productRows = order.products.map((p) => {
-        return `
+      const productRows = order.products
+        .map((p) => {
+          return `
           <tr>
             <td class="border px-3 py-1">${p.title}</td>
             <td class="border px-3 py-1 text-right">${p.price.toFixed(2)}€</td>
           </tr>
         `;
-      }).join("");
+        })
+        .join("");
 
       // Liste des réductions
-      const discountList = order.discounts.length > 0
-        ? order.discounts.map(d => `<li class="mb-1">${d.toFixed(2)}€</li>`).join("")
-        : "<li>Aucune réduction appliquée</li>";
+      const discountList =
+        order.discounts.length > 0
+          ? order.discounts
+              .map((d) => `<li class="mb-1">${d.toFixed(2)}€</li>`)
+              .join("")
+          : "<li>Aucune réduction appliquée</li>";
 
       // Code promo utilisé
       const promoCode = order.promo_code
@@ -36,11 +48,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Informations temporelles
       const dateInfo = `
-        <p><span class="font-semibold">Date Complète :</span> ${order.fullDate}</p>
+        <p><span class="font-semibold">Date Complète :</span> ${
+          order.fullDate
+        }</p>
         <p><span class="font-semibold">Jour :</span> ${order.day} - 
            <span class="font-semibold">Mois :</span> ${order.month} - 
            <span class="font-semibold">Année :</span> ${order.year}</p>
-        <p><span class="font-semibold">Heure :</span> ${order.hour || "Inconnue"}</p>
+        <p><span class="font-semibold">Heure :</span> ${
+          order.hour || "Inconnue"
+        }</p>
       `;
 
       // Détails commande
@@ -59,8 +75,11 @@ document.addEventListener("DOMContentLoaded", () => {
         : "";
 
       // Statut
-      const statusClass = order.status === "success" ? "text-green-600" : "text-red-600";
-      const statusInfo = `<p class="${statusClass}"><span class="font-semibold">Statut :</span> ${order.status || "Inconnu"}</p>`;
+      const statusClass =
+        order.status === "success" ? "text-green-600" : "text-red-600";
+      const statusInfo = `<p class="${statusClass}"><span class="font-semibold">Statut :</span> ${
+        order.status || "Inconnu"
+      }</p>`;
 
       orderElement.innerHTML = `
         <!-- Informations temps -->
@@ -103,7 +122,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <!-- Totaux & Statut -->
         <div class="space-y-2">
-          <p class="text-xl font-bold text-gray-800">Total dû : ${order.total_due.toFixed(2)}€</p>
+          <p class="text-xl font-bold text-gray-800">Total dû : ${order.total_due.toFixed(
+            2
+          )}€</p>
           ${deliveryInfo}
           ${statusInfo}
         </div>

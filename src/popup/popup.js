@@ -1,110 +1,165 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const statusElem = document.getElementById('status');
-    const orderCountElem = document.getElementById('order-count');
-    const errorMessage = document.getElementById('error-message');
-    const toggleButton = document.getElementById('toggle-button');
-    const buttonText = document.getElementById('button-text');
-    const buttonLoader = document.getElementById('button-loader');
+// popup.js
+document.addEventListener("DOMContentLoaded", () => {
+  const statusElem = document.getElementById("status");
+  const orderCountElem = document.getElementById("order-count");
+  const errorMessage = document.getElementById("error-message");
+  const toggleButton = document.getElementById("toggle-button");
+  const buttonText = document.getElementById("button-text");
+  const buttonLoader = document.getElementById("button-loader");
 
-    // Variable pour savoir si l'utilisateur n'est pas sur la bonne page ou n'est pas autorisé
-    let isAuthorized = false
+  // État local pour la popup (uniquement pour l'affichage, car l'état source est dans le background)
+  let isFetching = false;
+  let fetchedOrdersCount = 0;
+  let isAuthorized = false;
 
-    // Variable pour suivre l'état actuel (en cours de récupération ou non)
-    let isFetching = false;
-
-    // Variable pour suivre le nombre de commandes récupérées
-    let fetchedOrdersCount = 0;
-
-    // Fonction pour mettre à jour l'état du bouton et des éléments de l'interface
-    function updateUI() {
-        if (isFetching) {
-            statusElem.innerHTML = '🎉 Votre Wrapped 2024 sur Refectory est presque là !';
-            toggleButton.disabled = true; // Désactiver le bouton pendant l'extraction
-            buttonText.textContent = 'Analyse en cours...';
-            buttonLoader.classList.remove('hidden'); // Afficher le loader dans le bouton
-        } else {
-            statusElem.innerHTML = 'Prêt à découvrir votre Wrapped 2024 sur Refectory ?';
-            toggleButton.disabled = false; // Réactiver le bouton lorsque l'extraction est terminée
-            buttonText.textContent = 'Démarrer l\'analyse';
-            buttonLoader.classList.add('hidden'); // Cacher le loader dans le bouton
-            orderCountElem.classList.add('hidden');
-        }
+  /**
+   * Met à jour l'UI en fonction de isFetching
+   */
+  function updateUI() {
+    if (!isAuthorized) {
+      // Si pas autorisé, on masque tout sauf le message d'erreur
+      return;
     }
 
-    // Fonction pour afficher un message d'erreur si l'utilisateur n'est pas sur le bon onglet
-    function showError(message) {
-        errorMessage.innerHTML = message;
-        errorMessage.classList.remove('hidden');
-        statusElem.classList.add('hidden');
-        orderCountElem.classList.add('hidden');
-        toggleButton.classList.add('hidden');
-        isAuthorized = false;
+    if (isFetching) {
+      statusElem.innerHTML =
+        "🎉 Votre Wrapped 2024 sur Refectory est presque là !";
+      toggleButton.disabled = true;
+      buttonText.textContent = "Analyse en cours...";
+      buttonLoader.classList.remove("hidden");
+    } else {
+      statusElem.innerHTML =
+        "Prêt à découvrir votre Wrapped 2024 sur Refectory ?";
+      toggleButton.disabled = false;
+      buttonText.textContent = "Démarrer l'analyse";
+      buttonLoader.classList.add("hidden");
     }
 
-    // Fonction pour masquer le message d'erreur et afficher l'interface principale
-    function hideError() {
-        errorMessage.classList.add('hidden');
-        statusElem.classList.remove('hidden');
-        orderCountElem.classList.remove('hidden');
-        toggleButton.classList.remove('hidden');
-        isAuthorized = true;
+    if (fetchedOrdersCount > 0) {
+      orderCountElem.textContent = `${fetchedOrdersCount} commandes`;
+      orderCountElem.classList.remove("hidden");
+    } else {
+      orderCountElem.classList.add("hidden");
+    }
+  }
+
+  /**
+   * Affiche un message d'erreur et masque les autres éléments
+   */
+  function showError(message) {
+    errorMessage.innerHTML = message;
+    errorMessage.classList.remove("hidden");
+    statusElem.classList.add("hidden");
+    orderCountElem.classList.add("hidden");
+    toggleButton.classList.add("hidden");
+    isAuthorized = false;
+  }
+
+  /**
+   * Cache le message d'erreur et affiche l'interface principale
+   */
+  function hideError() {
+    errorMessage.classList.add("hidden");
+    statusElem.classList.remove("hidden");
+    toggleButton.classList.remove("hidden");
+    // On laisse orderCountElem masqué ou non en fonction de fetchedOrdersCount
+    isAuthorized = true;
+  }
+
+  // ---------------------------------------------
+  // 1) Vérifier si l'utilisateur est sur la bonne URL
+  // ---------------------------------------------
+  chrome.runtime.sendMessage({ action: "isFetching" }, (response) => {
+    if (chrome.runtime.lastError) {
+      console.error("Erreur :", chrome.runtime.lastError.message);
+      showError("⚠️ Impossible de récupérer le statut. Veuillez réessayer.");
+      return;
     }
 
-    // Fonction pour initialiser l'état de la popup en interrogeant le background
-    function initializePopup() {
-        chrome.runtime.sendMessage({ action: 'isFetching' }, (response) => {
-            if (chrome.runtime.lastError) {
-                console.error("Erreur lors de l'envoi du message :", chrome.runtime.lastError.message);
-                showError("⚠️ Une erreur est survenue. Veuillez réessayer.");
-                return;
-            }
-            if (!response.isAuthorized) {
-                showError("🚫 Oups ! Vous n'êtes pas sur la page <strong>Historique des commandes</strong> sur Refectory. Veuillez naviguer vers cette page pour commencer.");
-                return;
-            }
-            hideError();
-            isFetching = response.isFetching;
-            fetchedOrdersCount = response.fetchedOrdersCount || 0;
-            updateUI();
-        });
+    // Récupère isAuthorized depuis le background
+    if (!response.isAuthorized) {
+      // La popup sait qu'on n'est pas sur la bonne URL
+      showError(
+        "🚫 Oups ! Vous n'êtes pas sur la page <strong>Historique des commandes</strong> sur Refectory. Veuillez naviguer vers cette page."
+      );
+      return;
     }
 
-    // Écouteur pour le bouton toggle (maintenant uniquement démarrer)
-    toggleButton.addEventListener('click', () => {
-        if (!isFetching) {
-            // Lancer la récupération
-            chrome.runtime.sendMessage({ action: 'startFetchingOrders' }, (response) => {
-                if (chrome.runtime.lastError) {
-                    console.error("Erreur lors de l'envoi du message :", chrome.runtime.lastError.message);
-                    statusElem.textContent = 'Erreur de démarrage.';
-                    return;
-                }
-                console.log("Message de démarrage envoyé :", response);
-                isFetching = true;
-                updateUI();
-            });
-        }
+    // Sinon, on est autorisé
+    hideError();
+
+    // Récupère également isFetching et fetchedOrdersCount pour l'UI
+    isFetching = response.isFetching;
+    fetchedOrdersCount = response.fetchedOrdersCount || 0;
+    updateUI();
+  });
+
+  // ---------------------------------------------
+  // 2) Initialiser la popup depuis storage session
+  // ---------------------------------------------
+  function initializePopup() {
+    chrome.storage.session.get(["isFetching", "fetchedOrdersCount"], (data) => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          "Erreur lors de la lecture du session storage :",
+          chrome.runtime.lastError
+        );
+        showError("⚠️ Une erreur est survenue. Veuillez réessayer.");
+        return;
+      }
+      // Récupérer les valeurs
+      isFetching = data.isFetching || false;
+      fetchedOrdersCount = data.fetchedOrdersCount || 0;
+
+      // Mettre à jour l'UI
+      updateUI();
     });
+  }
 
-    // Écoute des messages du background pour mettre à jour le nombre de commandes
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.action === 'updateOrderCount') {
-            fetchedOrdersCount = message.count;
-            if (fetchedOrdersCount > 0 && isAuthorized) {
-                orderCountElem.textContent = `${fetchedOrdersCount} commandes`;
-                orderCountElem.classList.remove('hidden');
-            }
+  // ---------------------------------------------
+  // 3) Gérer les évènements utilisateur
+  // ---------------------------------------------
+  toggleButton.addEventListener("click", () => {
+    if (!isFetching) {
+      // Lancer la récupération
+      chrome.runtime.sendMessage(
+        { action: "startFetchingOrders" },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.error(
+              "Erreur lors de l'envoi du message :",
+              chrome.runtime.lastError.message
+            );
+            statusElem.textContent = "⚠️ Erreur de démarrage.";
+            return;
+          }
+          console.log("Message de démarrage envoyé :", response);
+          isFetching = true;
+          updateUI();
         }
-    });
+      );
+    }
+  });
 
-    // Réinitialiser la popup lorsque l'extraction est terminée
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.action === 'fetchingCompleted') {
-            isFetching = false;
-            updateUI();
-        }
-    });
+  // ---------------------------------------------
+  // 4) Écouter les messages envoyés par le background
+  // ---------------------------------------------
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("Message reçu dans la popup :", message);
 
-    // Initialiser la popup avec l'état actuel
-    initializePopup();
+    switch (message.action) {
+      case "updateOrderCount":
+        fetchedOrdersCount = message.count || 0;
+        updateUI();
+        break;
+
+      case "fetchingCompleted":
+        isFetching = false;
+        updateUI();
+        break;
+    }
+  });
+
+  // Initialisation
+  initializePopup();
 });
