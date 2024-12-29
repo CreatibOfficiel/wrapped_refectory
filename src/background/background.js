@@ -147,12 +147,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         chrome.tabs.reload(analysedTabId);
       }
 
-      // 2) Récupérer les commandes actuelles pour les transmettre aux nouvelles pages
-      const ordersData = extractedOrders.slice();
-
-      // 3) Ouvrir vos deux onglets internes
+      // 2) Ouvrir les onglets internes
       const urlsToOpen = [
-        chrome.runtime.getURL("src/pages/commands-extracted.html"),
+        // chrome.runtime.getURL("src/pages/commands-extracted.html"),
         chrome.runtime.getURL("src/pages/index.html"),
       ];
 
@@ -160,12 +157,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         chrome.tabs.create({ url: url });
       });
 
-      // 5) Réinitialiser extractedOrders, fetchedOrdersCount, etc.
+      // 3) Réinitialiser extractedOrders, fetchedOrdersCount, etc.
       updateExtractedOrders([]);
       updateOrderCount(0);
       updateAnalysedTabId(null);
 
-      // 6) Notifier la popup
+      // 4) Notifier la popup
       sendMessageToPopup({ action: "fetchingCompleted" });
       break;
 

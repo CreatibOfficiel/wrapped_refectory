@@ -43,7 +43,7 @@ function calculateYearData(orders) {
   const dessertsOrdersCount = calculateDessertsOrdersCount(orders);
   const fidelities = calculateFidelityPoints(orders);
   const discountSaved = calculateTotalDiscountSaved(orders);
-  const averageDeliveryHour = calculateAverageDeliveryHour(orders, totalOrders);
+  // On n'utilise plus l'heure de livraison (averageDeliveryHour) dans la nouvelle version
   const { topMonth, topMonthCount } = calculateTopMonth(orders);
   const averageOrderPosition = calculateAverageOrderPosition(orders);
 
@@ -57,7 +57,6 @@ function calculateYearData(orders) {
     dessertsOrdersCount,
     fidelities,
     discountSaved,
-    averageDeliveryHour,
     topMonth,
     topMonthCount,
     averageOrderPosition,
@@ -166,45 +165,13 @@ function calculateFidelityPoints(orders) {
  */
 function calculateTotalDiscountSaved(orders) {
   let totalDiscount = 0;
-  console.log(orders);
   orders.forEach((order) => {
-    console.log(order.discounts);
     order.discounts.forEach((discount) => {
-      console.log(discount);
       discount = Number(discount);
       totalDiscount += discount; // Montant négatif
     });
   });
   return -totalDiscount; // On le rend positif
-}
-
-/**
- * Calcule l'heure moyenne de livraison (moyenne des heures de livraison).
- */
-function calculateAverageDeliveryHour(orders, totalOrders) {
-  const totalDeliveryMinutes = orders.reduce((sum, order) => {
-    if (order.hour) {
-      const [hours, minutes] = order.hour.split(":").map(Number);
-      return sum + (hours * 60 + minutes);
-    }
-    return sum;
-  }, 0);
-
-  const averageDeliveryTime =
-    totalOrders > 0 ? totalDeliveryMinutes / totalOrders : 0;
-  return minutesToTimeString(Math.round(averageDeliveryTime));
-}
-
-/**
- * Convertit un nombre total de minutes en une chaîne "HH:MM".
- */
-function minutesToTimeString(totalMinutes) {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-    2,
-    "0"
-  )}`;
 }
 
 /**
@@ -255,57 +222,68 @@ function calculateTopMonth(orders) {
 }
 
 /**
- * Génère un tableau de slides avec un ton humoristique, basé sur les données annuelles.
+ * Génère un tableau de 9 slides avec un ton humoristique, basé sur les données annuelles.
  */
 function generateSlides(yearData) {
   return [
+    // 1. Slide d'Intro
     {
       isIntro: true,
-      text: `2024, c'est l'année des grandes faims... et des grands festins ! Prêt à découvrir votre bilan gourmand ?`,
+      text: `Bienvenue dans votre rétro culinaire 2024 !<br><br>
+      Entre plaisirs de table et découvertes savoureuses, vous avez mis les petits plats dans les grands avec Refectory.<br>
+      Prêt(e) à voir tout ce que vous avez englouti cette année ? 🍴😋`,
       cta: "Commencer",
     },
+    // 2. Slide Commandes & Diversité Culinaire
     {
-      text: `Vous avez passé un total de <span class="text-4xl font-bold text-green-600">${yearData.totalOrders}</span> commandes cette année.<br>On dirait que votre estomac a mené une révolution, et a gagné haut la main !`,
+      text: `Vous avez passé <span class="text-4xl font-bold text-green-600">${yearData.totalOrders}</span> commandes cette année, 
+      et testé <span class="text-4xl font-bold text-green-600">${yearData.totalUniqueDishes}</span> plats différents.<br>
+      Vous avez clairement un palais d'explorateur ! Indiana Jones aurait été fier. 🍽️💪`,
     },
-    {
-      isCombined: true,
-      totalSpent: yearData.totalSpent.toFixed(2),
-      fidelities: yearData.fidelities,
-    },
-    {
-      text: `Sinon, vous avez dégusté <span class="text-4xl font-bold text-green-600">${yearData.totalUniqueDishes}</span> plats différents cette année.<br>Une véritable odyssée culinaire !`,
-    },
+    // 3. Slide Top 3 des Plats
     {
       isPodium: true,
       topDishes: yearData.topDishes,
     },
+    // 4. Slide Vos Gains et Économies
     {
-      text: `Le mois où vous avez passé le plus de commandes est <span class="text-4xl font-bold text-green-600">${yearData.topMonth}</span> avec <span class="text-4xl font-bold text-green-600">${yearData.topMonthCount}</span> commandes.<br>On dirait que ce mois est votre préféré pour régaler vos papilles !`,
+      isCombined: true,
+      totalSpent: yearData.totalSpent.toFixed(2),
+      fidelities: yearData.fidelities,
+      discountSaved: yearData.discountSaved.toFixed(2),
     },
+    // 5. Slide Vos Statistiques de Commande & Positionnement
     {
-      isAverageOrderPosition: true,
-      averageOrderPosition: yearData.averageOrderPosition,
+      // On fusionne ici le coût moyen par commande et la position moyenne
+      text: `Chaque commande vous a coûté un honorable <span class="text-4xl font-bold text-green-600">${yearData.averageSpent.toFixed(
+        2
+      )}€</span>, la preuve qu’on peut se régaler sans exploser son budget.<br><br>
+      Vous étiez en moyenne le/la <span class="text-4xl font-bold text-green-600">${Math.round(
+        yearData.averageOrderPosition
+      )}</span> à commander sur votre lieu de livraison,<br>
+      toujours pile à l’heure pour ne pas rater le festin. Bravo pour votre ponctualité légendaire, même dans la gourmandise ! 🕒🍴`,
     },
+    // 6. Slide Mois Favori
+    {
+      text: `Votre mois préféré ? <span class="text-4xl font-bold text-green-600">${yearData.topMonth}</span>, 
+      où vous avez fait chauffer les fourneaux (ou plutôt nos cuisines) avec <span class="text-4xl font-bold text-green-600">${yearData.topMonthCount}</span> commandes.<br>
+      Clairement, c’est le moment où votre appétit était au sommet de sa forme. 🍴🔥`,
+    },
+    // 7. Slide Nombre de Desserts
     {
       isDessertOrdersCount: true,
       dessertOrdersCount: yearData.dessertsOrdersCount,
     },
+    // 8. Slide Dessert Favori
     {
       isFavoriteDessert: true,
       favoriteDessert: yearData.favoriteDessert,
     },
+    // 9. Slide de Conclusion
     {
-      text: `En moyenne, vous avez dépensé <span class="text-4xl font-bold text-green-600">${yearData.averageSpent.toFixed(
-        2
-      )}€</span> par commande, avec une livraison à <span class="text-4xl font-bold text-green-600">${
-        yearData.averageDeliveryHour
-      }</span>.<br>Toujours à l'heure ! (pas comme la SNCF 🤫)`,
-    },
-    {
-      text: `Grâce aux réductions, vous avez économisé <span class="text-4xl font-bold text-green-600">${yearData.discountSaved}€</span>.<br>Vous avez pensé à faire un petit cadre pour ce billet virtuel de bonheur ?`,
-    },
-    {
-      text: `Merci d'avoir croqué dans 2024 avec nous !<br>On se retrouve en 2025 pour encore plus de plats délirants, de surprises gustatives, et de petites folies culinaires.<br>Bon appétit à jamais !`,
+      text: `Merci d’avoir fait de 2024 une année pleine de saveurs avec Refectory !<br><br>
+      On se retrouve en 2025 pour encore plus de plats, de découvertes... et peut-être quelques excès gourmands.<br>
+      Allez, on ne juge pas ! À bientôt et bon app’ ! 🍽️✨`,
     },
   ];
 }
@@ -323,22 +301,21 @@ function initializeSlideshow(slides) {
 
   let currentSlide = 0;
   let interval = null;
-  const slideDuration = 10000; // 10 secondes
+  const slideDuration = 15000; // 15 secondes
 
   function showSlide(index) {
     slidesContainer.innerHTML = "";
     const slide = slides[index];
 
+    // Gestion du rendu spécifique selon le type de slide
     if (slide.isPodium) {
       renderPodiumSlide(slide);
     } else if (slide.isDessertOrdersCount) {
       renderDessertOrdersCountSlide(slide);
     } else if (slide.isCombined) {
-      renderCombinedSlide(slide);
+      renderGainsEtEconomiesSlide(slide);
     } else if (slide.isFavoriteDessert) {
       renderFavoriteDessertSlide(slide);
-    } else if (slide.isAverageOrderPosition) {
-      renderAverageOrderPositionSlide(slide);
     } else {
       renderStandardSlide(slide);
     }
@@ -347,110 +324,186 @@ function initializeSlideshow(slides) {
     if (!slide.isIntro) navButtons.classList.remove("hidden");
   }
 
+  /**
+   * Slide Top 3 des Plats
+   */
   function renderPodiumSlide(slide) {
-    const podiumElement = document.createElement("div");
-    podiumElement.classList.add("flex", "flex-col", "items-center");
-    podiumElement.innerHTML = `
-            <h2 class="text-2xl font-semibold mb-4">Top 3 de vos plats les plus dévorés</h2>
-            <div class="flex space-x-6">
-                ${slide.topDishes
-                  .map(
-                    (dish) => `
-                    <div class="flex flex-col items-center">
-                        <div class="bg-yellow-400 p-4 rounded-lg shadow-lg">
-                            <span class="text-3xl font-bold">${dish.count}</span>
-                        </div>
-                        <span class="mt-2 text-lg">${dish.title}</span>
-                    </div>
-                `
-                  )
-                  .join("")}
-            </div>
-            <p class="mt-4 text-lg">
-                Votre plat fétiche ? Le <span class="text-4xl font-bold text-green-600">${
-                  slide.topDishes[0].title
-                }</span> !
-                Commandé <span class="text-4xl font-bold text-green-600">${
-                  slide.topDishes[0].count
-                }</span> fois.<br>
-                À ce rythme, on va lui donner votre nom, histoire de le rendre officiel.
-            </p>
-        `;
-    slidesContainer.appendChild(podiumElement);
+    // On récupère le 1er, 2e et 3e du topDishes
+    // (Ils sont déjà triés dans l’ordre décroissant : 0 => top1, 1 => top2, 2 => top3)
+    const [firstPlace, secondPlace, thirdPlace] = slide.topDishes;
+  
+    const podiumContainer = document.createElement("div");
+    podiumContainer.classList.add(
+      "w-full",
+      "flex",
+      "flex-col",
+      "items-center"
+    );
+  
+    // Titre du podium
+    const titleElement = document.createElement("h2");
+    titleElement.classList.add("text-2xl", "font-semibold", "mb-4");
+    titleElement.textContent = "Top 3 de vos plats les plus dévorés";
+    podiumContainer.appendChild(titleElement);
+  
+    // Container aligné en bas pour faire un « vrai » podium
+    const blocksContainer = document.createElement("div");
+    blocksContainer.classList.add(
+      "flex",
+      "justify-center",
+      "items-end", // Aligne les blocs en bas
+      "space-x-4",
+      "mb-4"
+    );
+  
+    // 2e place (bloc de taille moyenne, à gauche)
+    const secondBlock = createPodiumBlock({
+      title: secondPlace.title,
+      count: secondPlace.count,
+      blockClasses: "bg-podium-silver h-44 w-20 flex flex-col items-center justify-end rounded-t-md"
+    });
+  
+    // 1ʳᵉ place (bloc le plus haut, au centre)
+    const firstBlock = createPodiumBlock({
+      title: firstPlace.title,
+      count: firstPlace.count,
+      blockClasses: "bg-podium-gold h-56 w-20 flex flex-col items-center justify-end rounded-t-md"
+    });
+  
+    // 3ᵉ place (bloc le plus petit, à droite)
+    const thirdBlock = createPodiumBlock({
+      title: thirdPlace.title,
+      count: thirdPlace.count,
+      blockClasses: "bg-podium-bronze h-32 w-20 flex flex-col items-center justify-end rounded-t-md"
+    });
+  
+    // Ajout des blocs au container
+    blocksContainer.appendChild(secondBlock);
+    blocksContainer.appendChild(firstBlock);
+    blocksContainer.appendChild(thirdBlock);
+    podiumContainer.appendChild(blocksContainer);
+  
+    // Petit texte de conclusion sous le podium
+    const paragraph = document.createElement("p");
+    paragraph.classList.add("mt-4", "text-lg", "text-center");
+    paragraph.innerHTML = `
+      Et comme tout bon explorateur, vous avez trouvé un trésor culinaire : 
+      <span class="text-4xl font-bold text-green-600">${firstPlace.title}</span>, 
+      avec <span class="text-4xl font-bold text-green-600">${firstPlace.count}</span> commandes !<br>
+      Si vous continuez comme ça, le chef va devoir renommer le plat en votre honneur. 🍲👑
+    `;
+    podiumContainer.appendChild(paragraph);
+  
+    // On vide le container parent et on y injecte notre nouveau podium
+    slidesContainer.appendChild(podiumContainer);
+  
+    // Met à jour la navigation (boutons, barre de progression, etc.)
     updateNavigation();
   }
+  
+  /**
+   * Fonction utilitaire pour créer un bloc de podium
+   */
+  function createPodiumBlock({ title, count, blockClasses }) {
+    const block = document.createElement("div");
+    block.className = blockClasses;
+  
+    // On affiche le nombre de commandes en bas du bloc
+    const countElement = document.createElement("div");
+    countElement.classList.add("text-2xl", "font-bold", "mb-2");
+    countElement.textContent = count;
+  
+    // Titre du plat (en bas également)
+    const titleElement = document.createElement("div");
+    titleElement.classList.add("text-sm", "text-center", "pb-2");
+    titleElement.textContent = title;
+  
+    // On empile countElement puis titleElement
+    block.appendChild(countElement);
+    block.appendChild(titleElement);
+  
+    return block;
+  }  
 
+  /**
+   * Slide Nombre de Desserts
+   */
   function renderDessertOrdersCountSlide(slide) {
     const dessertOrdersElement = document.createElement("div");
     dessertOrdersElement.classList.add("flex", "flex-col", "items-center");
     dessertOrdersElement.innerHTML = `
-            <p class="text-lg">
-                Et niveau douceurs, vous avez commandé au moins <span class="text-4xl font-bold text-green-600">${slide.dessertOrdersCount}</span> fois un dessert.<br>
-                Votre dent sucrée vous remercie ! 🍰😋
-            </p>
-        `;
+      <p class="text-lg">
+        Team dessert ? Oh que oui !<br><br>
+        Vous avez succombé <span class="text-4xl font-bold text-green-600">${slide.dessertOrdersCount}</span> fois à une douceur sucrée.<br>
+        Clairement, impossible de dire non à une petite gourmandise. 🍰😋
+      </p>
+    `;
     slidesContainer.appendChild(dessertOrdersElement);
     updateNavigation();
   }
 
-  function renderCombinedSlide(slide) {
-    const combinedElement = document.createElement("div");
-    combinedElement.classList.add("flex", "flex-col", "items-center");
-    combinedElement.innerHTML = `
-            <p class="text-lg mb-4">
-                Avec toutes ces commandes, vous avez laissé <span class="text-4xl font-bold text-green-600">${slide.totalSpent}€</span> dans nos cuisines...<br>
-                On vous jure, pas un centime n'a servi à acheter une licorne en chocolat (quoique...).
-            </p>
-            <p class="text-lg">
-                Grâce à ça, vous avez gagné <span class="text-green-600 font-semibold">${slide.fidelities}</span> points de fidélité ! 🎉
-            </p>
-        `;
-    slidesContainer.appendChild(combinedElement);
+  /**
+   * Slide Vos Gains et Économies
+   */
+  function renderGainsEtEconomiesSlide(slide) {
+    const element = document.createElement("div");
+    element.classList.add("flex", "flex-col", "items-center");
+    element.innerHTML = `
+      <p class="text-lg">
+        En 2024, vous avez investi 
+        <span class="text-4xl font-bold text-green-600">${slide.totalSpent}€</span> 
+        dans votre bonheur gustatif (et on applaudit ça 👏).<br><br>
+        Avec <span class="text-4xl font-bold text-green-600">${
+          slide.fidelities
+        }</span> points de fidélité 
+        et <span class="text-4xl font-bold text-green-600">${
+          slide.discountSaved
+        }€</span> d’économies,<br>
+        vous êtes presque prêt(e) à devenir ministre de l'Économie... gastronomique. 💶🍲
+      </p>
+    `;
+    slidesContainer.appendChild(element);
     updateNavigation();
   }
 
+  /**
+   * Slide Dessert Favori
+   */
   function renderFavoriteDessertSlide(slide) {
     const dessertElement = document.createElement("div");
     dessertElement.classList.add("flex", "flex-col", "items-center");
 
     if (slide.favoriteDessert.count === 0) {
+      // Cas où aucun dessert n'a été commandé
       dessertElement.innerHTML = `
-                <p class="text-lg">
-                    Vous n'avez commandé aucun dessert cette année. Pas de souci, on ne vous en voudra pas !
-                </p>
-            `;
+        <p class="text-lg">
+          Vous n'avez commandé aucun dessert cette année. 
+          Pas de souci, on ne vous en voudra pas !
+        </p>
+      `;
       slidesContainer.appendChild(dessertElement);
       updateNavigation();
       return;
     }
+
     dessertElement.innerHTML = `
-            <h2 class="text-2xl font-semibold mb-4">Votre Dessert Favori</h2>
-            <div class="bg-yellow-400 p-4 rounded-lg shadow-lg">
-                <span class="text-3xl font-bold">${slide.favoriteDessert.count} ${slide.favoriteDessert.title}</span>
-            </div>
-            <p class="mt-4 text-lg">On peut dire que ${slide.favoriteDessert.title} a fait sensation, qui a besoin de crème brûlée quand on a ça ? 🍨✨</p>
-        `;
+      <p class="text-lg">
+        Votre chouchou du dessert ? 
+        <span class="text-4xl font-bold text-green-600">${
+          slide.favoriteDessert.title
+        }</span>, savouré <span class="text-4xl font-bold text-green-600">${
+      slide.favoriteDessert.count
+    }</span> fois.<br>
+        Vous êtes carrément en couple avec ce dessert... et on approuve totalement. 🍨❤️
+      </p>
+    `;
     slidesContainer.appendChild(dessertElement);
     updateNavigation();
   }
 
-  function renderAverageOrderPositionSlide(slide) {
-    const averagePositionElement = document.createElement("div");
-    averagePositionElement.classList.add("flex", "flex-col", "items-center");
-    averagePositionElement.innerHTML = `
-            <p class="text-lg">
-                Vous êtes en moyenne le <span class="text-4xl font-bold text-green-600">${Math.round(
-                  slide.averageOrderPosition
-                )}</span>${
-      Math.round(slide.averageOrderPosition) > 1 ? "ème" : "er"
-    } à commander sur votre lieu de livraison chaque jour.<br>
-                Continuez ainsi pour grimper dans les classements culinaires ! 🏆🍽️
-            </p>
-        `;
-    slidesContainer.appendChild(averagePositionElement);
-    updateNavigation();
-  }
-
+  /**
+   * Slide standard (intro, conclusion, ou toute slide simple).
+   */
   function renderStandardSlide(slide) {
     const slideElement = document.createElement("div");
     slideElement.classList.add(
@@ -487,22 +540,32 @@ function initializeSlideshow(slides) {
     }
   }
 
+  /**
+   * Gère l'action du bouton "Commencer" dans la slide d'intro.
+   */
   function handleIntroSlide() {
     navButtons.classList.add("hidden");
     stopAutoPlay();
-    document.getElementById("start-button").addEventListener("click", () => {
-      currentSlide++;
-      showSlide(currentSlide);
-      updateProgressBar();
-      navButtons.classList.remove("hidden");
-      startAutoPlay();
-    });
+
+    const startButton = document.getElementById("start-button");
+    if (startButton) {
+      startButton.addEventListener("click", () => {
+        currentSlide++;
+        showSlide(currentSlide);
+        updateProgressBar();
+        navButtons.classList.remove("hidden");
+        startAutoPlay();
+      });
+    }
   }
 
+  /**
+   * Met à jour l'affichage des boutons et la barre de progression.
+   */
   function updateNavigation() {
     updateProgressBar();
 
-    // Affiche le bouton "Précédent" sauf sur la slide juste après l'intro
+    // Affiche le bouton "Précédent" sauf sur la slide d'intro
     if (currentSlide > 0) {
       prevButton.classList.remove("hidden");
     } else {

@@ -19,6 +19,11 @@ module.exports = {
       animation: {
         fadeIn: 'fadeIn 1s forwards',
       },
+      colors: {
+        'podium-gold': '#FFD700', // Couleur or
+        'podium-silver': '#C0C0C0', // Couleur argent
+        'podium-bronze': '#CD7F32', // Couleur bronze
+      },
     },
   },
   plugins: [],
