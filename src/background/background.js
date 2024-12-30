@@ -2,6 +2,7 @@ let extractedOrders = [];
 let isFetching = false;
 let fetchedOrdersCount = 0;
 let analysedTabId = null;
+let pageLanguage = null;
 
 console.log("Background script loaded!");
 
@@ -16,7 +17,13 @@ initializeStateFromSessionStorage();
  */
 function initializeStateFromSessionStorage() {
   chrome.storage.session.get(
-    ["extractedOrders", "isFetching", "fetchedOrdersCount", "analysedTabId"],
+    [
+      "extractedOrders",
+      "isFetching",
+      "fetchedOrdersCount",
+      "analysedTabId",
+      "pageLanguage",
+    ],
     (data) => {
       if (chrome.runtime.lastError) {
         console.error(
@@ -28,15 +35,33 @@ function initializeStateFromSessionStorage() {
       isFetching = data.isFetching || false;
       fetchedOrdersCount = data.fetchedOrdersCount || 0;
       analysedTabId = data.analysedTabId || null;
+      pageLanguage = data.pageLanguage || null;
 
       console.log("État initial récupéré de session storage :", {
         extractedOrders,
         isFetching,
         fetchedOrdersCount,
         analysedTabId,
+        pageLanguage,
       });
     }
   );
+}
+
+/**
+ * Met à jour la langue détectée et la stocke dans le session storage
+ * @param {string|null} lang
+ */
+function updatePageLanguage(lang) {
+  pageLanguage = lang;
+  chrome.storage.session.set({ pageLanguage: lang }, () => {
+    if (chrome.runtime.lastError) {
+      console.error(
+        `Erreur lors de l'écriture de pageLanguage : ${chrome.runtime.lastError}`
+      );
+    }
+    console.log("pageLanguage mis à jour :", lang);
+  });
 }
 
 /**
@@ -186,8 +211,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       break;
 
     case "getOrders":
-      // Retourne les commandes extraites
-      sendResponse({ data: extractedOrders });
+      // Retourne les commandes extraites + la langue
+      sendResponse({ data: extractedOrders, language: pageLanguage });
       break;
 
     case "isFetching":
@@ -258,8 +283,17 @@ async function fetchOrders() {
           return;
         }
 
+        // EXTRAIRE LES COMMANDES ET LA LANGUE
         const orders = response?.data || [];
+        const lang = response?.language || null;
+
         console.log(`Commandes récupérées : ${orders.length}`);
+        console.log(`Langue détectée (réponse content) : ${lang}`);
+
+        // STOCKER LA LANGUE
+        if (lang) {
+          updatePageLanguage(lang);
+        }
 
         // Mettre à jour extractedOrders
         if (orders.length > 0) {

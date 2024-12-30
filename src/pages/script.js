@@ -1,10 +1,261 @@
+const translations = {
+  fr: {
+    introText: `Bienvenue dans votre rétro culinaire 2024 !<br><br>
+      Entre plaisirs de table et découvertes savoureuses, vous avez mis les petits plats dans les grands avec Refectory.<br>
+      Prêt(e) à voir tout ce que vous avez englouti cette année ? 🍴😋`,
+    introCTA: "Commencer",
+
+    ordersAndDiversity: `Vous avez passé <span class="text-4xl font-bold text-green-600">{{ totalOrders }}</span> commandes cette année, 
+      et testé <span class="text-4xl font-bold text-green-600">{{ totalUniqueDishes }}</span> plats différents.<br>
+      Vous avez clairement un palais d'explorateur ! Indiana Jones aurait été fier. 🍽️💪`,
+
+    podiumTitle: "Top 3 de vos plats les plus dévorés",
+    podiumConclusion: `Et comme tout bon explorateur, vous avez trouvé un trésor culinaire : 
+      <span class="text-4xl font-bold text-green-600">{{ firstTitle }}</span>, 
+      avec <span class="text-4xl font-bold text-green-600">{{ firstCount }}</span> commandes !<br>
+      Si vous continuez comme ça, le chef va devoir renommer le plat en votre honneur. 🍲👑`,
+
+    gainsEtEconomies: `En 2024, vous avez investi 
+      <span class="text-4xl font-bold text-green-600">{{ totalSpent }}€</span> 
+      dans votre bonheur gustatif (et on applaudit ça 👏).<br><br>
+      Avec <span class="text-4xl font-bold text-green-600">{{ fidelities }}</span> points de fidélité 
+      et <span class="text-4xl font-bold text-green-600">{{ discountSaved }}€</span> d’économies,<br>
+      vous êtes presque prêt(e) à devenir ministre de l'Économie... gastronomique. 💶🍲`,
+
+    averageSpentAndPosition: `Chaque commande vous a coûté un honorable 
+      <span class="text-4xl font-bold text-green-600">{{ averageSpent }}€</span>, 
+      la preuve qu’on peut se régaler sans exploser son budget.<br><br>
+      Vous étiez en moyenne le/la 
+      <span class="text-4xl font-bold text-green-600">{{ averageOrderPosition }}</span> 
+      à commander sur votre lieu de livraison,<br>
+      toujours pile à l’heure pour ne pas rater le festin. Bravo pour votre ponctualité légendaire, même dans la gourmandise ! 🕒🍴`,
+
+    favoriteMonth: `Votre mois préféré ? 
+      <span class="text-4xl font-bold text-green-600">{{ topMonth }}</span>, 
+      où vous avez fait chauffer les fourneaux (ou plutôt nos cuisines) avec 
+      <span class="text-4xl font-bold text-green-600">{{ topMonthCount }}</span> commandes.<br>
+      Clairement, c’est le moment où votre appétit était au sommet de sa forme. 🍴🔥`,
+
+    dessertCount: `Team dessert ? Oh que oui !<br><br>
+      Vous avez succombé <span class="text-4xl font-bold text-green-600">{{ dessertsOrdersCount }}</span> fois à une douceur sucrée.<br>
+      Clairement, impossible de dire non à une petite gourmandise. 🍰😋`,
+
+    noDessert: `Vous n'avez commandé aucun dessert cette année. 
+      Pas de souci, on ne vous en voudra pas !`,
+
+    favoriteDessert: `Votre chouchou du dessert ? 
+      <span class="text-4xl font-bold text-green-600">{{ title }}</span>, savouré <span class="text-4xl font-bold text-green-600">{{ count }}</span> fois.<br>
+      Vous êtes carrément en couple avec ce dessert... et on approuve totalement. 🍨❤️`,
+
+    conclusion: `Merci d’avoir fait de 2024 une année pleine de saveurs avec Refectory !<br><br>
+      On se retrouve en 2025 pour encore plus de plats, de découvertes... et peut-être quelques excès gourmands.<br>
+      Allez, on ne juge pas ! À bientôt et bon app’ ! 🍽️✨`,
+
+    noOrdersMessage: "Aucune commande trouvée pour cette année.",
+
+    buttons: {
+      prev: "Précédent",
+      next: "Suivant",
+    },
+  },
+
+  en: {
+    introText: `Welcome to your 2024 culinary retrospective!<br><br>
+      Between delicious treats and savory discoveries, you've gone all out with Refectory.<br>
+      Ready to see everything you've devoured this year? 🍴😋`,
+    introCTA: "Start",
+
+    ordersAndDiversity: `You placed <span class="text-4xl font-bold text-green-600">{{ totalOrders }}</span> orders this year, 
+      and tried <span class="text-4xl font-bold text-green-600">{{ totalUniqueDishes }}</span> different dishes.<br>
+      Clearly, you’ve got a true explorer’s palate! Indiana Jones would be proud. 🍽️💪`,
+
+    podiumTitle: "Top 3 of your most devoured dishes",
+    podiumConclusion: `And like any great explorer, you discovered a culinary treasure: 
+      <span class="text-4xl font-bold text-green-600">{{ firstTitle }}</span>, 
+      with <span class="text-4xl font-bold text-green-600">{{ firstCount }}</span> orders!<br>
+      Keep it up and the chef might rename the dish in your honor. 🍲👑`,
+
+    gainsEtEconomies: `In 2024, you invested 
+      <span class="text-4xl font-bold text-green-600">{{ totalSpent }}€</span> 
+      in your gourmet happiness (and we applaud you for it 👏).<br><br>
+      With <span class="text-4xl font-bold text-green-600">{{ fidelities }}</span> loyalty points 
+      and <span class="text-4xl font-bold text-green-600">{{ discountSaved }}€</span> saved,<br>
+      you’re practically ready to become Minister of Gastronomic Economy. 💶🍲`,
+
+    averageSpentAndPosition: `Each order cost you a modest 
+      <span class="text-4xl font-bold text-green-600">{{ averageSpent }}€</span>, 
+      proving you can feast without breaking the bank.<br><br>
+      On average, you were the 
+      <span class="text-4xl font-bold text-green-600">{{ averageOrderPosition }}</span> 
+      person to order at your delivery location,<br>
+      always right on time so you wouldn't miss out on the feast. Cheers to your legendary punctuality, even in indulgence! 🕒🍴`,
+
+    favoriteMonth: `Your favorite month? 
+      <span class="text-4xl font-bold text-green-600">{{ topMonth }}</span>, 
+      when you really fired up the kitchen (or rather ours) with 
+      <span class="text-4xl font-bold text-green-600">{{ topMonthCount }}</span> orders.<br>
+      Clearly, that’s when your appetite was at its peak. 🍴🔥`,
+
+    dessertCount: `Team dessert? Oh yes!<br><br>
+      You gave in to something sweet <span class="text-4xl font-bold text-green-600">{{ dessertsOrdersCount }}</span> times.<br>
+      Let's just say resistance was futile. 🍰😋`,
+
+    noDessert: `You didn't order any dessert this year.
+      No worries, we won't hold it against you!`,
+
+    favoriteDessert: `Your dessert crush? 
+      <span class="text-4xl font-bold text-green-600">{{ title }}</span>, enjoyed <span class="text-4xl font-bold text-green-600">{{ count }}</span> times.<br>
+      You’re basically in a relationship with that dessert... and we fully support it. 🍨❤️`,
+
+    conclusion: `Thank you for making 2024 so flavorful with Refectory!<br><br>
+      See you in 2025 for even more dishes, discoveries... and maybe a few guilty pleasures.<br>
+      Hey, we’re not judging! See you soon and bon appétit! 🍽️✨`,
+
+    noOrdersMessage: "No orders found for this year.",
+
+    buttons: {
+      prev: "Previous",
+      next: "Next",
+    },
+  },
+};
+
+/**
+ * Remplace les {{ placeholders }} par les valeurs correspondantes dans data
+ */
+function replacePlaceholders(text, data) {
+  let newText = text;
+  for (const key in data) {
+    const regex = new RegExp(`{{\\s*${key}\\s*}}`, "g");
+    newText = newText.replace(regex, data[key]);
+  }
+  return newText;
+}
+
+/**
+ * Retourne le tableau de slides en fonction de la langue choisie.
+ * @param {Object} yearData - Données calculées (totalSpent, etc.).
+ * @param {string} language - Code de langue ("fr" ou "en").
+ * @returns {Array} - Tableau de slides
+ */
+function getSlides(yearData, language) {
+  const t = translations[language] || translations.fr;
+
+  // Pour le podium, on récupère les 3 plats
+  const [firstPlace, secondPlace, thirdPlace] = yearData.topDishes || [];
+
+  return [
+    // 1. Slide d'Intro
+    {
+      isIntro: true,
+      text: replacePlaceholders(t.introText, {}),
+      cta: t.introCTA,
+    },
+    // 2. Slide Commandes & Diversité Culinaire
+    {
+      text: replacePlaceholders(t.ordersAndDiversity, {
+        totalOrders: yearData.totalOrders,
+        totalUniqueDishes: yearData.totalUniqueDishes,
+      }),
+    },
+    // 3. Slide Top 3 des Plats (Podium)
+    {
+      isPodium: true,
+      topDishes: yearData.topDishes,
+      podiumTitle: t.podiumTitle,
+      podiumConclusion: replacePlaceholders(t.podiumConclusion, {
+        firstTitle: firstPlace?.title || "-",
+        firstCount: firstPlace?.count || "0",
+      }),
+    },
+    // 4. Slide Vos Gains et Économies
+    {
+      isCombined: true,
+      totalSpent: yearData.totalSpent.toFixed(2),
+      fidelities: yearData.fidelities,
+      discountSaved: yearData.discountSaved.toFixed(2),
+      combinedText: replacePlaceholders(t.gainsEtEconomies, {
+        totalSpent: yearData.totalSpent.toFixed(2),
+        fidelities: yearData.fidelities,
+        discountSaved: yearData.discountSaved.toFixed(2),
+      }),
+    },
+    // 5. Slide Statistiques de Commande & Positionnement
+    {
+      text: replacePlaceholders(t.averageSpentAndPosition, {
+        averageSpent: yearData.averageSpent.toFixed(2),
+        averageOrderPosition: Math.round(yearData.averageOrderPosition),
+      }),
+    },
+    // 6. Slide Mois Favori
+    {
+      text: replacePlaceholders(t.favoriteMonth, {
+        topMonth: yearData.topMonth,
+        topMonthCount: yearData.topMonthCount,
+      }),
+    },
+    // 7. Slide Nombre de Desserts
+    {
+      isDessertOrdersCount: true,
+      dessertOrdersCount: yearData.dessertsOrdersCount,
+      dessertCountText: replacePlaceholders(t.dessertCount, {
+        dessertsOrdersCount: yearData.dessertsOrdersCount,
+      }),
+    },
+    // 8. Slide Dessert Favori
+    {
+      isFavoriteDessert: true,
+      favoriteDessert: yearData.favoriteDessert,
+      noDessertText: t.noDessert,
+      favoriteDessertText: replacePlaceholders(t.favoriteDessert, {
+        title: yearData.favoriteDessert.title,
+        count: yearData.favoriteDessert.count,
+      }),
+    },
+    // 9. Slide de Conclusion
+    {
+      text: replacePlaceholders(t.conclusion, {}),
+    },
+  ];
+}
+
+/**
+ * Affiche un message indiquant qu'aucune commande n'a été trouvée.
+ * On gère aussi la traduction du message si besoin.
+ */
+function displayNoOrdersMessage(language) {
+  const slidesContainer = document.getElementById("slides-container");
+  const t = translations[language] || translations.fr;
+  slidesContainer.innerHTML = `<p class="text-xl text-gray-500">${t.noOrdersMessage}</p>`;
+}
+
+/**
+ * Met à jour les textes des boutons de navigation en fonction de la langue.
+ * @param {string} language - Code de langue ("fr" ou "en").
+ */
+function updateButtonTexts(language) {
+  const t = translations[language] || translations.fr;
+
+  const prevButton = document.getElementById("prev-button");
+  const nextButton = document.getElementById("next-button");
+
+  if (prevButton && nextButton) {
+    prevButton.textContent = t.buttons.prev;
+    nextButton.textContent = t.buttons.next;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  // Récupère les commandes via le service worker
+  // Récupère les commandes (et la langue) via le service worker
   chrome.runtime.sendMessage({ action: "getOrders" }, (response) => {
     const orders = response?.data || [];
+    const pageLanguage = response?.language || "fr"; // ou "en"
+
+    // Met à jour les textes des boutons avant toute autre action
+    updateButtonTexts(pageLanguage);
 
     if (!orders.length) {
-      displayNoOrdersMessage();
+      displayNoOrdersMessage(pageLanguage);
       return;
     }
 
@@ -12,21 +263,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const yearData = calculateYearData(orders);
 
     // Générer les slides avec ces données
-    const slides = generateSlides(yearData);
+    const slides = getSlides(yearData, pageLanguage);
 
     // Initialiser le diaporama
     initializeSlideshow(slides);
   });
 });
-
-/**
- * Affiche un message indiquant qu'aucune commande n'a été trouvée.
- */
-function displayNoOrdersMessage() {
-  const slidesContainer = document.getElementById("slides-container");
-  slidesContainer.innerHTML =
-    '<p class="text-xl text-gray-500">Aucune commande trouvée pour cette année.</p>';
-}
 
 /**
  * Calcule les données annuelles à partir de la liste des commandes.
@@ -222,73 +464,6 @@ function calculateTopMonth(orders) {
 }
 
 /**
- * Génère un tableau de 9 slides avec un ton humoristique, basé sur les données annuelles.
- */
-function generateSlides(yearData) {
-  return [
-    // 1. Slide d'Intro
-    {
-      isIntro: true,
-      text: `Bienvenue dans votre rétro culinaire 2024 !<br><br>
-      Entre plaisirs de table et découvertes savoureuses, vous avez mis les petits plats dans les grands avec Refectory.<br>
-      Prêt(e) à voir tout ce que vous avez englouti cette année ? 🍴😋`,
-      cta: "Commencer",
-    },
-    // 2. Slide Commandes & Diversité Culinaire
-    {
-      text: `Vous avez passé <span class="text-4xl font-bold text-green-600">${yearData.totalOrders}</span> commandes cette année, 
-      et testé <span class="text-4xl font-bold text-green-600">${yearData.totalUniqueDishes}</span> plats différents.<br>
-      Vous avez clairement un palais d'explorateur ! Indiana Jones aurait été fier. 🍽️💪`,
-    },
-    // 3. Slide Top 3 des Plats
-    {
-      isPodium: true,
-      topDishes: yearData.topDishes,
-    },
-    // 4. Slide Vos Gains et Économies
-    {
-      isCombined: true,
-      totalSpent: yearData.totalSpent.toFixed(2),
-      fidelities: yearData.fidelities,
-      discountSaved: yearData.discountSaved.toFixed(2),
-    },
-    // 5. Slide Vos Statistiques de Commande & Positionnement
-    {
-      // On fusionne ici le coût moyen par commande et la position moyenne
-      text: `Chaque commande vous a coûté un honorable <span class="text-4xl font-bold text-green-600">${yearData.averageSpent.toFixed(
-        2
-      )}€</span>, la preuve qu’on peut se régaler sans exploser son budget.<br><br>
-      Vous étiez en moyenne le/la <span class="text-4xl font-bold text-green-600">${Math.round(
-        yearData.averageOrderPosition
-      )}</span> à commander sur votre lieu de livraison,<br>
-      toujours pile à l’heure pour ne pas rater le festin. Bravo pour votre ponctualité légendaire, même dans la gourmandise ! 🕒🍴`,
-    },
-    // 6. Slide Mois Favori
-    {
-      text: `Votre mois préféré ? <span class="text-4xl font-bold text-green-600">${yearData.topMonth}</span>, 
-      où vous avez fait chauffer les fourneaux (ou plutôt nos cuisines) avec <span class="text-4xl font-bold text-green-600">${yearData.topMonthCount}</span> commandes.<br>
-      Clairement, c’est le moment où votre appétit était au sommet de sa forme. 🍴🔥`,
-    },
-    // 7. Slide Nombre de Desserts
-    {
-      isDessertOrdersCount: true,
-      dessertOrdersCount: yearData.dessertsOrdersCount,
-    },
-    // 8. Slide Dessert Favori
-    {
-      isFavoriteDessert: true,
-      favoriteDessert: yearData.favoriteDessert,
-    },
-    // 9. Slide de Conclusion
-    {
-      text: `Merci d’avoir fait de 2024 une année pleine de saveurs avec Refectory !<br><br>
-      On se retrouve en 2025 pour encore plus de plats, de découvertes... et peut-être quelques excès gourmands.<br>
-      Allez, on ne juge pas ! À bientôt et bon app’ ! 🍽️✨`,
-    },
-  ];
-}
-
-/**
  * Initialise et gère le diaporama.
  * @param {Array} slides - Tableau d'objets représentant les slides.
  */
@@ -331,21 +506,16 @@ function initializeSlideshow(slides) {
     // On récupère le 1er, 2e et 3e du topDishes
     // (Ils sont déjà triés dans l’ordre décroissant : 0 => top1, 1 => top2, 2 => top3)
     const [firstPlace, secondPlace, thirdPlace] = slide.topDishes;
-  
+
     const podiumContainer = document.createElement("div");
-    podiumContainer.classList.add(
-      "w-full",
-      "flex",
-      "flex-col",
-      "items-center"
-    );
-  
+    podiumContainer.classList.add("w-full", "flex", "flex-col", "items-center");
+
     // Titre du podium
     const titleElement = document.createElement("h2");
     titleElement.classList.add("text-2xl", "font-semibold", "mb-4");
-    titleElement.textContent = "Top 3 de vos plats les plus dévorés";
+    titleElement.textContent = slide.podiumTitle;
     podiumContainer.appendChild(titleElement);
-  
+
     // Container aligné en bas pour faire un « vrai » podium
     const blocksContainer = document.createElement("div");
     blocksContainer.classList.add(
@@ -355,75 +525,73 @@ function initializeSlideshow(slides) {
       "space-x-4",
       "mb-4"
     );
-  
+
     // 2e place (bloc de taille moyenne, à gauche)
     const secondBlock = createPodiumBlock({
       title: secondPlace.title,
       count: secondPlace.count,
-      blockClasses: "bg-podium-silver h-44 w-20 flex flex-col items-center justify-end rounded-t-md"
+      blockClasses:
+        "bg-podium-silver h-44 w-20 flex flex-col items-center justify-end rounded-t-md",
     });
-  
+
     // 1ʳᵉ place (bloc le plus haut, au centre)
     const firstBlock = createPodiumBlock({
       title: firstPlace.title,
       count: firstPlace.count,
-      blockClasses: "bg-podium-gold h-56 w-20 flex flex-col items-center justify-end rounded-t-md"
+      blockClasses:
+        "bg-podium-gold h-56 w-20 flex flex-col items-center justify-end rounded-t-md",
     });
-  
+
     // 3ᵉ place (bloc le plus petit, à droite)
     const thirdBlock = createPodiumBlock({
       title: thirdPlace.title,
       count: thirdPlace.count,
-      blockClasses: "bg-podium-bronze h-32 w-20 flex flex-col items-center justify-end rounded-t-md"
+      blockClasses:
+        "bg-podium-bronze h-32 w-20 flex flex-col items-center justify-end rounded-t-md",
     });
-  
+
     // Ajout des blocs au container
     blocksContainer.appendChild(secondBlock);
     blocksContainer.appendChild(firstBlock);
     blocksContainer.appendChild(thirdBlock);
     podiumContainer.appendChild(blocksContainer);
-  
+
     // Petit texte de conclusion sous le podium
     const paragraph = document.createElement("p");
     paragraph.classList.add("mt-4", "text-lg", "text-center");
-    paragraph.innerHTML = `
-      Et comme tout bon explorateur, vous avez trouvé un trésor culinaire : 
-      <span class="text-4xl font-bold text-green-600">${firstPlace.title}</span>, 
-      avec <span class="text-4xl font-bold text-green-600">${firstPlace.count}</span> commandes !<br>
-      Si vous continuez comme ça, le chef va devoir renommer le plat en votre honneur. 🍲👑
-    `;
+    paragraph.innerHTML = paragraph.innerHTML = slide.podiumConclusion;
     podiumContainer.appendChild(paragraph);
-  
+
     // On vide le container parent et on y injecte notre nouveau podium
     slidesContainer.appendChild(podiumContainer);
-  
+
     // Met à jour la navigation (boutons, barre de progression, etc.)
     updateNavigation();
   }
-  
+
   /**
    * Fonction utilitaire pour créer un bloc de podium
    */
   function createPodiumBlock({ title, count, blockClasses }) {
     const block = document.createElement("div");
     block.className = blockClasses;
-  
+
     // On affiche le nombre de commandes en bas du bloc
     const countElement = document.createElement("div");
     countElement.classList.add("text-2xl", "font-bold", "mb-2");
     countElement.textContent = count;
-  
+
     // Titre du plat (en bas également)
     const titleElement = document.createElement("div");
     titleElement.classList.add("text-sm", "text-center", "pb-2");
     titleElement.textContent = title;
-  
+
     // On empile countElement puis titleElement
     block.appendChild(countElement);
     block.appendChild(titleElement);
-  
+
     return block;
-  }  
+  }
 
   /**
    * Slide Nombre de Desserts
@@ -431,13 +599,7 @@ function initializeSlideshow(slides) {
   function renderDessertOrdersCountSlide(slide) {
     const dessertOrdersElement = document.createElement("div");
     dessertOrdersElement.classList.add("flex", "flex-col", "items-center");
-    dessertOrdersElement.innerHTML = `
-      <p class="text-lg">
-        Team dessert ? Oh que oui !<br><br>
-        Vous avez succombé <span class="text-4xl font-bold text-green-600">${slide.dessertOrdersCount}</span> fois à une douceur sucrée.<br>
-        Clairement, impossible de dire non à une petite gourmandise. 🍰😋
-      </p>
-    `;
+    dessertOrdersElement.innerHTML = `<p class="text-lg">${slide.dessertCountText}</p>`;
     slidesContainer.appendChild(dessertOrdersElement);
     updateNavigation();
   }
@@ -453,12 +615,8 @@ function initializeSlideshow(slides) {
         En 2024, vous avez investi 
         <span class="text-4xl font-bold text-green-600">${slide.totalSpent}€</span> 
         dans votre bonheur gustatif (et on applaudit ça 👏).<br><br>
-        Avec <span class="text-4xl font-bold text-green-600">${
-          slide.fidelities
-        }</span> points de fidélité 
-        et <span class="text-4xl font-bold text-green-600">${
-          slide.discountSaved
-        }€</span> d’économies,<br>
+        Avec <span class="text-4xl font-bold text-green-600">${slide.fidelities}</span> points de fidélité 
+        et <span class="text-4xl font-bold text-green-600">${slide.discountSaved}€</span> d’économies,<br>
         vous êtes presque prêt(e) à devenir ministre de l'Économie... gastronomique. 💶🍲
       </p>
     `;
@@ -475,28 +633,13 @@ function initializeSlideshow(slides) {
 
     if (slide.favoriteDessert.count === 0) {
       // Cas où aucun dessert n'a été commandé
-      dessertElement.innerHTML = `
-        <p class="text-lg">
-          Vous n'avez commandé aucun dessert cette année. 
-          Pas de souci, on ne vous en voudra pas !
-        </p>
-      `;
+      dessertElement.innerHTML = `<p class="text-lg">${slide.noDessertText}</p>`;
       slidesContainer.appendChild(dessertElement);
       updateNavigation();
       return;
     }
 
-    dessertElement.innerHTML = `
-      <p class="text-lg">
-        Votre chouchou du dessert ? 
-        <span class="text-4xl font-bold text-green-600">${
-          slide.favoriteDessert.title
-        }</span>, savouré <span class="text-4xl font-bold text-green-600">${
-      slide.favoriteDessert.count
-    }</span> fois.<br>
-        Vous êtes carrément en couple avec ce dessert... et on approuve totalement. 🍨❤️
-      </p>
-    `;
+    dessertElement.innerHTML = `<p class="text-lg">${slide.favoriteDessertText}</p>`;
     slidesContainer.appendChild(dessertElement);
     updateNavigation();
   }
@@ -521,7 +664,7 @@ function initializeSlideshow(slides) {
 
     let innerHTML = `<p class="text-lg mb-8">${slide.text}</p>`;
     if (slide.isIntro) {
-      innerHTML += `<button id="start-button" class="bg-green-600 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-green-700 transition-colors duration-300">Commencer</button>`;
+      innerHTML += `<button id="start-button" class="bg-green-600 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-green-700 transition-colors duration-300">${slide.cta}</button>`;
     }
 
     slideElement.innerHTML = innerHTML;

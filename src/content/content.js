@@ -184,7 +184,7 @@
 
   /**
    * Parse la date à partir du texte extrait d'une carte de commande.
-   * Retourne un objet contenant { fullDate, day, month, year, hour, minute } ou null si échec.
+   * Retourne un objet contenant { fullDate, day, month, year, hour } ou null si échec.
    * @param {string} textContent
    * @returns {{fullDate: string, day: number, month: number, year: number, hour: string} | null}
    */
@@ -495,11 +495,28 @@
   }
 
   /**
+   * Récupère la langue de la page actuelle (français ou anglais).
+   * (via le <select> dans le footer).
+   *
+   * @returns {string} 'fr' ou 'en' (par défaut 'fr')
+   */
+  function getGlobalPageLanguage() {
+    const languageDropdown = document.querySelector(".select select");
+    if (languageDropdown) {
+      // On récupère la valeur sélectionnée (ex: 'fr' ou 'en')
+      return languageDropdown.value;
+    }
+    // Si jamais l'élément n'existe pas, on renvoie 'fr' par défaut
+    return "fr";
+  }
+
+  /**
    * Traite toutes les commandes, en cliquant sur "Afficher plus" jusqu'à ne plus en avoir
    * ou jusqu'à détecter une année précédente.
-   * @returns {Promise<Array>} Liste des commandes récupérées.
+   *
+   * @returns {Promise<{ orders: Array, language: string }>}
    */
-  async function processAllOrders() {
+  async function fetchAllOrdersAndLanguage() {
     // const currentYear = new Date().getFullYear();
     const currentYear = 2024;
     let allOrders = [];
@@ -507,6 +524,9 @@
     let lastProcessedDate = null;
     let sameDateCount = 0;
     let isFetching = true; // Flag local pour arrêter le processus si nécessaire
+
+    // RÉCUPÉRER LA LANGUE AVANT (ou après, peu importe, c'est global)
+    const languageOnPage = getGlobalPageLanguage();
 
     while (keepLoading && isFetching) {
       console.log("Analyse des commandes affichées...");
@@ -552,8 +572,12 @@
 
     console.log("Analyse terminée, envoi des données...");
     console.log("Total des commandes récupérées :", allOrders);
+    console.log("Langue détectée :", languageOnPage);
 
-    return allOrders;
+    return {
+      orders: allOrders,
+      language: languageOnPage,
+    };
   }
 
   /**
@@ -561,10 +585,11 @@
    */
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "getOrders") {
-      // Exécuter le processus de récupération des commandes
-      processAllOrders()
-        .then((orders) => {
-          sendResponse({ data: orders });
+      // Exécuter le processus de récupération des commandes + la langue
+      fetchAllOrdersAndLanguage()
+        .then(({ orders, language }) => {
+          // On renvoie data ET la langue
+          sendResponse({ data: orders, language });
         })
         .catch((error) => {
           console.error(
