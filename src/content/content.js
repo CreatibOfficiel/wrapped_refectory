@@ -251,17 +251,15 @@
       total_due: null,
       discounts: [],
     };
-  
+
     const totalSections = orderCard.querySelectorAll(
       ".c-shared-totals__section"
     );
-  
+
     totalSections.forEach((section) => {
       const totalItems = section.querySelectorAll(".c-shared-total-item");
       totalItems.forEach((item) => {
-        const labelElem = item.querySelector(
-          ".c-shared-total-item__label"
-        );
+        const labelElem = item.querySelector(".c-shared-total-item__label");
         const label = labelElem
           ? labelElem.innerText.trim().toLowerCase()
           : null;
@@ -271,11 +269,11 @@
         );
         console.log("Prix trouvé :", priceElem);
         const priceText = priceElem ? priceElem.innerText.trim() : null;
-  
+
         if (priceText) {
           // On parse le prix
           const parsedPrice = parsePrice(priceText);
-  
+
           // Vérification en fonction du label
           if (label) {
             if (label.includes("delivery") || label.includes("livraison")) {
@@ -285,10 +283,7 @@
               label.includes("loyalty points")
             ) {
               totals.points_fidelity = priceText;
-            } else if (
-              label.includes("total due") ||
-              label.includes("total")
-            ) {
+            } else if (label.includes("total due") || label.includes("total")) {
               totals.total_due = parsedPrice;
             } else if (
               label.includes("discount") ||
@@ -312,7 +307,7 @@
         }
       });
     });
-  
+
     return totals;
   }
 
@@ -330,7 +325,11 @@
       const parentItem = promoSection.closest(".c-shared-total-item");
       if (parentItem) {
         const label = parentItem.querySelector(".c-shared-total-item__label");
-        if (label && (label.innerText.toLowerCase().includes("code") || label.innerText.toLowerCase().includes("promo"))) {
+        if (
+          label &&
+          (label.innerText.toLowerCase().includes("code") ||
+            label.innerText.toLowerCase().includes("promo"))
+        ) {
           // Récupère le code promo
           const promoCode = promoSection.innerText.trim();
           return promoCode || null;

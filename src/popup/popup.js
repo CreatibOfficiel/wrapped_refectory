@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
       buttonLoader.classList.remove("hidden");
     } else if (fetchedOrdersCount > 0 && !isFetching) {
       statusElem.innerHTML =
-        "🎉 Votre Wrapped 2024 sur Refectory est disponible !"
+        "🎉 Votre Wrapped 2024 sur Refectory est disponible !";
       toggleButton.disabled = false;
       buttonText.textContent = "Relancer l'analyse";
       buttonLoader.classList.add("hidden");
