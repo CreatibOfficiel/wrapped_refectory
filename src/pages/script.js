@@ -15,7 +15,7 @@ const translations = {
       avec <span class="text-4xl font-bold text-green-600">{{ firstCount }}</span> commandes !<br>
       Si vous continuez comme ça, le chef va devoir renommer le plat en votre honneur. 🍲👑`,
 
-    gainsEtEconomies: `En 2024, vous avez investi 
+    gainsAndSavings: `En 2024, vous avez investi 
       <span class="text-4xl font-bold text-green-600">{{ totalSpent }}€</span> 
       dans votre bonheur gustatif (et on applaudit ça 👏).<br><br>
       Avec <span class="text-4xl font-bold text-green-600">{{ fidelities }}</span> points de fidélité 
@@ -51,7 +51,7 @@ const translations = {
       On se retrouve en 2025 pour encore plus de plats, de découvertes... et peut-être quelques excès gourmands.<br>
       Allez, on ne juge pas ! À bientôt et bon app’ ! 🍽️✨`,
 
-    noOrdersMessage: "Aucune commande trouvée pour cette année.",
+    noOrdersMessage: "Aucune commande trouvée pour 2024.",
 
     buttons: {
       prev: "Précédent",
@@ -75,7 +75,7 @@ const translations = {
       with <span class="text-4xl font-bold text-green-600">{{ firstCount }}</span> orders!<br>
       Keep it up and the chef might rename the dish in your honor. 🍲👑`,
 
-    gainsEtEconomies: `In 2024, you invested 
+    gainsAndSavings: `In 2024, you invested 
       <span class="text-4xl font-bold text-green-600">{{ totalSpent }}€</span> 
       in your gourmet happiness (and we applaud you for it 👏).<br><br>
       With <span class="text-4xl font-bold text-green-600">{{ fidelities }}</span> loyalty points 
@@ -111,7 +111,7 @@ const translations = {
       See you in 2025 for even more dishes, discoveries... and maybe a few guilty pleasures.<br>
       Hey, we’re not judging! See you soon and bon appétit! 🍽️✨`,
 
-    noOrdersMessage: "No orders found for this year.",
+    noOrdersMessage: "No orders found for 2024.",
 
     buttons: {
       prev: "Previous",
@@ -121,7 +121,10 @@ const translations = {
 };
 
 /**
- * Remplace les {{ placeholders }} par les valeurs correspondantes dans data
+ * Replaces {{ placeholders }} with corresponding values in data
+ * @param {string} text - The text containing placeholders.
+ * @param {Object} data - An object containing key-value pairs for replacement.
+ * @returns {string} - The text with placeholders replaced by actual values.
  */
 function replacePlaceholders(text, data) {
   let newText = text;
@@ -133,32 +136,33 @@ function replacePlaceholders(text, data) {
 }
 
 /**
- * Retourne le tableau de slides en fonction de la langue choisie.
- * @param {Object} yearData - Données calculées (totalSpent, etc.).
- * @param {string} language - Code de langue ("fr" ou "en").
- * @returns {Array} - Tableau de slides
+ * Returns the array of slides based on the selected language.
+ * @param {Object} yearData - Calculated data (totalSpent, etc.).
+ * @param {string} language - Language code ("fr" or "en").
+ * @returns {Array} - Array of slides.
  */
 function getSlides(yearData, language) {
   const t = translations[language] || translations.fr;
 
-  // Pour le podium, on récupère les 3 plats
+  // Destructure the top dishes
   const [firstPlace, secondPlace, thirdPlace] = yearData.topDishes || [];
 
-  return [
-    // 1. Slide d'Intro
+  // Initialize slides array
+  const slides = [
+    // 1. Intro Slide
     {
       isIntro: true,
       text: replacePlaceholders(t.introText, {}),
       cta: t.introCTA,
     },
-    // 2. Slide Commandes & Diversité Culinaire
+    // 2. Orders & Culinary Diversity Slide
     {
       text: replacePlaceholders(t.ordersAndDiversity, {
         totalOrders: yearData.totalOrders,
         totalUniqueDishes: yearData.totalUniqueDishes,
       }),
     },
-    // 3. Slide Top 3 des Plats (Podium)
+    // 3. Top 3 Dishes (Podium) Slide
     {
       isPodium: true,
       topDishes: yearData.topDishes,
@@ -168,60 +172,70 @@ function getSlides(yearData, language) {
         firstCount: firstPlace?.count || "0",
       }),
     },
-    // 4. Slide Vos Gains et Économies
+    // 4. Gains and Savings Slide
     {
       isCombined: true,
       totalSpent: yearData.totalSpent.toFixed(2),
       fidelities: yearData.fidelities,
       discountSaved: yearData.discountSaved.toFixed(2),
-      combinedText: replacePlaceholders(t.gainsEtEconomies, {
+      combinedText: replacePlaceholders(t.gainsAndSavings, {
         totalSpent: yearData.totalSpent.toFixed(2),
         fidelities: yearData.fidelities,
         discountSaved: yearData.discountSaved.toFixed(2),
       }),
     },
-    // 5. Slide Statistiques de Commande & Positionnement
+    // 5. Average Spent & Position Slide
     {
       text: replacePlaceholders(t.averageSpentAndPosition, {
         averageSpent: yearData.averageSpent.toFixed(2),
         averageOrderPosition: Math.round(yearData.averageOrderPosition),
       }),
     },
-    // 6. Slide Mois Favori
+    // 6. Favorite Month Slide
     {
       text: replacePlaceholders(t.favoriteMonth, {
         topMonth: yearData.topMonth,
         topMonthCount: yearData.topMonthCount,
       }),
     },
-    // 7. Slide Nombre de Desserts
-    {
-      isDessertOrdersCount: true,
-      dessertOrdersCount: yearData.dessertsOrdersCount,
-      dessertCountText: replacePlaceholders(t.dessertCount, {
-        dessertsOrdersCount: yearData.dessertsOrdersCount,
-      }),
-    },
-    // 8. Slide Dessert Favori
-    {
-      isFavoriteDessert: true,
-      favoriteDessert: yearData.favoriteDessert,
-      noDessertText: t.noDessert,
-      favoriteDessertText: replacePlaceholders(t.favoriteDessert, {
-        title: yearData.favoriteDessert.title,
-        count: yearData.favoriteDessert.count,
-      }),
-    },
-    // 9. Slide de Conclusion
-    {
-      text: replacePlaceholders(t.conclusion, {}),
-    },
   ];
+
+  // Add Dessert Slides only if there are dessert orders
+  if (yearData.dessertsOrdersCount > 0) {
+    slides.push(
+      // 7. Dessert Count Slide
+      {
+        isDessertOrdersCount: true,
+        dessertOrdersCount: yearData.dessertsOrdersCount,
+        dessertCountText: replacePlaceholders(t.dessertCount, {
+          dessertsOrdersCount: yearData.dessertsOrdersCount,
+        }),
+      },
+      // 8. Favorite Dessert Slide
+      {
+        isFavoriteDessert: true,
+        favoriteDessert: yearData.favoriteDessert,
+        noDessertText: t.noDessert,
+        favoriteDessertText: replacePlaceholders(t.favoriteDessert, {
+          title: yearData.favoriteDessert.title,
+          count: yearData.favoriteDessert.count,
+        }),
+      }
+    );
+  }
+
+  // 9. Conclusion Slide
+  slides.push({
+    text: replacePlaceholders(t.conclusion, {}),
+  });
+
+  return slides;
 }
 
 /**
- * Affiche un message indiquant qu'aucune commande n'a été trouvée.
- * On gère aussi la traduction du message si besoin.
+ * Displays a message indicating that no orders were found.
+ * Also handles the translation of the message if necessary.
+ * @param {string} language - Language code ("fr" or "en").
  */
 function displayNoOrdersMessage(language) {
   const slidesContainer = document.getElementById("slides-container");
@@ -230,8 +244,8 @@ function displayNoOrdersMessage(language) {
 }
 
 /**
- * Met à jour les textes des boutons de navigation en fonction de la langue.
- * @param {string} language - Code de langue ("fr" ou "en").
+ * Updates the navigation button texts based on the selected language.
+ * @param {string} language - Language code ("fr" or "en").
  */
 function updateButtonTexts(language) {
   const t = translations[language] || translations.fr;
@@ -246,36 +260,37 @@ function updateButtonTexts(language) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Récupère les commandes (et la langue) via le service worker
+  // Retrieve orders (and language) via the service worker
   chrome.runtime.sendMessage({ action: "getOrders" }, (response) => {
-    const orders = response?.data || [];
-    const pageLanguage = response?.language || "fr"; // ou "en"
-
-    // Met à jour les textes des boutons avant toute autre action
-    updateButtonTexts(pageLanguage);
+    const orders = response?.orders || [];
+    const pageLanguage = response?.language || "fr"; // or "en"
 
     if (!orders.length) {
       displayNoOrdersMessage(pageLanguage);
       return;
     }
 
-    // Calculer les données annuelles
+    // Update the navigation button texts
+    updateButtonTexts(pageLanguage);
+
+    // Calculate annual data
     const yearData = calculateYearData(orders);
 
-    // Générer les slides avec ces données
+    // Generate slides with this data
     const slides = getSlides(yearData, pageLanguage);
 
-    // Initialiser le diaporama
+    // Initialize the slideshow
     initializeSlideshow(slides);
   });
 });
 
 /**
- * Calcule les données annuelles à partir de la liste des commandes.
- * @param {Array} orders - Tableau d'objets commande.
- * @returns {Object} yearData - Données calculées pour l'année.
+ * Calculates the annual data from the list of orders.
+ * @param {Array} orders - Array of order objects.
+ * @returns {Object} yearData - Calculated data for the year.
  */
 function calculateYearData(orders) {
+  console.log("Calculating year data from orders:", orders);
   const totalOrders = orders.length;
   const totalSpent = calculateTotalSpent(orders);
   const averageSpent = totalOrders > 0 ? totalSpent / totalOrders : 0;
@@ -285,7 +300,7 @@ function calculateYearData(orders) {
   const dessertsOrdersCount = calculateDessertsOrdersCount(orders);
   const fidelities = calculateFidelityPoints(orders);
   const discountSaved = calculateTotalDiscountSaved(orders);
-  // On n'utilise plus l'heure de livraison (averageDeliveryHour) dans la nouvelle version
+  // No longer using delivery hour (averageDeliveryHour) in the new version
   const { topMonth, topMonthCount } = calculateTopMonth(orders);
   const averageOrderPosition = calculateAverageOrderPosition(orders);
 
@@ -306,14 +321,18 @@ function calculateYearData(orders) {
 }
 
 /**
- * Calcule le montant total dépensé pour toutes les commandes.
+ * Calculates the total amount spent on all orders.
+ * @param {Array} orders - Array of order objects.
+ * @returns {number} - Total amount spent.
  */
 function calculateTotalSpent(orders) {
   return orders.reduce((sum, order) => sum + (Number(order.total_due) || 0), 0);
 }
 
 /**
- * Calcule le nombre total de plats différents commandés.
+ * Calculates the total number of unique dishes ordered.
+ * @param {Array} orders - Array of order objects.
+ * @returns {number} - Total unique dishes.
  */
 function calculateTotalUniqueDishes(orders) {
   const uniqueDishes = new Set();
@@ -324,7 +343,9 @@ function calculateTotalUniqueDishes(orders) {
 }
 
 /**
- * Calcule les 3 plats les plus commandés (en considérant uniquement le premier produit de chaque commande).
+ * Calculates the top 3 most ordered dishes (considering only the first product of each order).
+ * @param {Array} orders - Array of order objects.
+ * @returns {Array} - Array of top 3 dishes with title and count.
  */
 function calculateTopDishes(orders) {
   const firstProductCount = {};
@@ -343,7 +364,9 @@ function calculateTopDishes(orders) {
 }
 
 /**
- * Calcule le dessert favori (le plus commandé en excluant le premier produit de chaque commande).
+ * Calculates the favorite dessert (most ordered excluding the first product of each order).
+ * @param {Array} orders - Array of order objects.
+ * @returns {Object} - Favorite dessert with title and count.
  */
 function calculateFavoriteDessert(orders) {
   const dessertCount = {};
@@ -368,16 +391,18 @@ function calculateFavoriteDessert(orders) {
 }
 
 /**
- * Calcule le nombre de commandes qui incluent un dessert (plus d'un produit).
+ * Calculates the number of orders that include a dessert (more than one product).
+ * @param {Array} orders - Array of order objects.
+ * @returns {number} - Number of dessert-inclusive orders.
  */
 function calculateDessertsOrdersCount(orders) {
   return orders.filter((order) => order.products.length > 1).length;
 }
 
 /**
- * Calcule le classement moyen des commandes sur l'année.
- * @param {Array} orders - Tableau d'objets commande.
- * @returns {number} - Classement moyen.
+ * Calculates the average order position throughout the year.
+ * @param {Array} orders - Array of order objects.
+ * @returns {number} - Average order position.
  */
 function calculateAverageOrderPosition(orders) {
   if (orders.length === 0) return 0;
@@ -389,7 +414,9 @@ function calculateAverageOrderPosition(orders) {
 }
 
 /**
- * Calcule le nombre total de points de fidélité accumulés.
+ * Calculates the total number of fidelity points accumulated.
+ * @param {Array} orders - Array of order objects.
+ * @returns {number} - Total fidelity points.
  */
 function calculateFidelityPoints(orders) {
   const pointsRegex = /\+(\d+)\s*pts/;
@@ -403,22 +430,24 @@ function calculateFidelityPoints(orders) {
 }
 
 /**
- * Calcule le total économisé grâce aux réductions.
+ * Calculates the total amount saved through discounts.
+ * @param {Array} orders - Array of order objects.
+ * @returns {number} - Total discounts saved.
  */
 function calculateTotalDiscountSaved(orders) {
   let totalDiscount = 0;
   orders.forEach((order) => {
     order.discounts.forEach((discount) => {
       discount = Number(discount);
-      totalDiscount += discount; // Montant négatif
+      totalDiscount += discount; // Negative amount
     });
   });
-  return -totalDiscount; // On le rend positif
+  return -totalDiscount; // Make it positive
 }
 
 /**
- * Calcule le mois (au format français) où l'utilisateur a passé le plus de commandes.
- * @param {Array} orders - Liste des commandes.
+ * Calculates the month with the highest number of orders.
+ * @param {Array} orders - List of orders.
  * @returns {{ topMonth: string, topMonthCount: number }}
  */
 function calculateTopMonth(orders) {
@@ -446,7 +475,7 @@ function calculateTopMonth(orders) {
     monthCount[month] = (monthCount[month] || 0) + 1;
   });
 
-  // Trouver le mois avec le plus de commandes
+  // Find the month with the highest number of orders
   let topMonth = null;
   let topMonthCount = 0;
 
@@ -464,8 +493,8 @@ function calculateTopMonth(orders) {
 }
 
 /**
- * Initialise et gère le diaporama.
- * @param {Array} slides - Tableau d'objets représentant les slides.
+ * Initializes and manages the slideshow.
+ * @param {Array} slides - Array of slide objects.
  */
 function initializeSlideshow(slides) {
   const slidesContainer = document.getElementById("slides-container");
@@ -476,117 +505,127 @@ function initializeSlideshow(slides) {
 
   let currentSlide = 0;
   let interval = null;
-  const slideDuration = 15000; // 15 secondes
+  const slideDuration = 15000; // 15 seconds
 
   function showSlide(index) {
     slidesContainer.innerHTML = "";
     const slide = slides[index];
 
-    // Gestion du rendu spécifique selon le type de slide
+    // Handle specific rendering based on slide type
     if (slide.isPodium) {
       renderPodiumSlide(slide);
     } else if (slide.isDessertOrdersCount) {
       renderDessertOrdersCountSlide(slide);
     } else if (slide.isCombined) {
-      renderGainsEtEconomiesSlide(slide);
+      renderGainsAndSavingsSlide(slide);
     } else if (slide.isFavoriteDessert) {
       renderFavoriteDessertSlide(slide);
     } else {
       renderStandardSlide(slide);
     }
 
-    // Afficher les boutons de navigation sauf pour l'intro
+    // Show navigation buttons except on the intro slide
     if (!slide.isIntro) navButtons.classList.remove("hidden");
   }
 
   /**
-   * Slide Top 3 des Plats
+   * Podium Slide (Top 3 Dishes)
    */
   function renderPodiumSlide(slide) {
-    // On récupère le 1er, 2e et 3e du topDishes
-    // (Ils sont déjà triés dans l’ordre décroissant : 0 => top1, 1 => top2, 2 => top3)
+    // Get the top 1st, 2nd, and 3rd dishes
     const [firstPlace, secondPlace, thirdPlace] = slide.topDishes;
 
     const podiumContainer = document.createElement("div");
     podiumContainer.classList.add("w-full", "flex", "flex-col", "items-center");
 
-    // Titre du podium
+    // Podium Title
     const titleElement = document.createElement("h2");
     titleElement.classList.add("text-2xl", "font-semibold", "mb-4");
     titleElement.textContent = slide.podiumTitle;
     podiumContainer.appendChild(titleElement);
 
-    // Container aligné en bas pour faire un « vrai » podium
+    // Container aligned at the bottom for a "real" podium look
     const blocksContainer = document.createElement("div");
     blocksContainer.classList.add(
       "flex",
       "justify-center",
-      "items-end", // Aligne les blocs en bas
+      "items-end", // Align blocks at the bottom
       "space-x-4",
       "mb-4"
     );
 
-    // 2e place (bloc de taille moyenne, à gauche)
-    const secondBlock = createPodiumBlock({
-      title: secondPlace.title,
-      count: secondPlace.count,
-      blockClasses:
-        "bg-podium-silver h-44 w-20 flex flex-col items-center justify-end rounded-t-md",
-    });
+    if (secondPlace) {
+      // 2nd place (medium-sized block, on the left)
+      const secondBlock = createPodiumBlock({
+        title: secondPlace.title,
+        count: secondPlace.count,
+        blockClasses:
+          "bg-podium-silver h-44 w-20 flex flex-col items-center justify-end rounded-t-md",
+      });
+      blocksContainer.appendChild(secondBlock);
+    }
 
-    // 1ʳᵉ place (bloc le plus haut, au centre)
-    const firstBlock = createPodiumBlock({
-      title: firstPlace.title,
-      count: firstPlace.count,
-      blockClasses:
-        "bg-podium-gold h-56 w-20 flex flex-col items-center justify-end rounded-t-md",
-    });
+    if (firstPlace) {
+      // 1st place (tallest block, in the center)
+      const firstBlock = createPodiumBlock({
+        title: firstPlace.title,
+        count: firstPlace.count,
+        blockClasses:
+          "bg-podium-gold h-56 w-20 flex flex-col items-center justify-end rounded-t-md",
+      });
+      blocksContainer.appendChild(firstBlock);
+    }
 
-    // 3ᵉ place (bloc le plus petit, à droite)
-    const thirdBlock = createPodiumBlock({
-      title: thirdPlace.title,
-      count: thirdPlace.count,
-      blockClasses:
-        "bg-podium-bronze h-32 w-20 flex flex-col items-center justify-end rounded-t-md",
-    });
+    if (thirdPlace) {
+      // 3rd place (smallest block, on the right)
+      const thirdBlock = createPodiumBlock({
+        title: thirdPlace.title,
+        count: thirdPlace.count,
+        blockClasses:
+          "bg-podium-bronze h-32 w-20 flex flex-col items-center justify-end rounded-t-md",
+      });
+      blocksContainer.appendChild(thirdBlock);
+    }
 
-    // Ajout des blocs au container
-    blocksContainer.appendChild(secondBlock);
-    blocksContainer.appendChild(firstBlock);
-    blocksContainer.appendChild(thirdBlock);
+    // Add the podium to the main container
     podiumContainer.appendChild(blocksContainer);
 
-    // Petit texte de conclusion sous le podium
+    // Conclusion text below the podium
     const paragraph = document.createElement("p");
     paragraph.classList.add("mt-4", "text-lg", "text-center");
-    paragraph.innerHTML = paragraph.innerHTML = slide.podiumConclusion;
+    paragraph.innerHTML = slide.podiumConclusion;
     podiumContainer.appendChild(paragraph);
 
-    // On vide le container parent et on y injecte notre nouveau podium
+    // Clear the parent container and inject the new podium
     slidesContainer.appendChild(podiumContainer);
 
-    // Met à jour la navigation (boutons, barre de progression, etc.)
+    // Update navigation (buttons, progress bar, etc.)
     updateNavigation();
   }
 
   /**
-   * Fonction utilitaire pour créer un bloc de podium
+   * Utility function to create a podium block
+   * @param {Object} params - Parameters for the podium block.
+   * @param {string} params.title - Title of the dish.
+   * @param {number} params.count - Number of orders.
+   * @param {string} params.blockClasses - CSS classes for styling.
+   * @returns {HTMLElement} - The podium block element.
    */
   function createPodiumBlock({ title, count, blockClasses }) {
     const block = document.createElement("div");
     block.className = blockClasses;
 
-    // On affiche le nombre de commandes en bas du bloc
+    // Display the number of orders at the bottom of the block
     const countElement = document.createElement("div");
     countElement.classList.add("text-2xl", "font-bold", "mb-2");
     countElement.textContent = count;
 
-    // Titre du plat (en bas également)
+    // Dish title (also at the bottom)
     const titleElement = document.createElement("div");
     titleElement.classList.add("text-sm", "text-center", "pb-2");
     titleElement.textContent = title;
 
-    // On empile countElement puis titleElement
+    // Stack countElement and titleElement
     block.appendChild(countElement);
     block.appendChild(titleElement);
 
@@ -594,7 +633,7 @@ function initializeSlideshow(slides) {
   }
 
   /**
-   * Slide Nombre de Desserts
+   * Dessert Orders Count Slide
    */
   function renderDessertOrdersCountSlide(slide) {
     const dessertOrdersElement = document.createElement("div");
@@ -605,19 +644,14 @@ function initializeSlideshow(slides) {
   }
 
   /**
-   * Slide Vos Gains et Économies
+   * Gains and Savings Slide
    */
-  function renderGainsEtEconomiesSlide(slide) {
+  function renderGainsAndSavingsSlide(slide) {
     const element = document.createElement("div");
     element.classList.add("flex", "flex-col", "items-center");
     element.innerHTML = `
       <p class="text-lg">
-        En 2024, vous avez investi 
-        <span class="text-4xl font-bold text-green-600">${slide.totalSpent}€</span> 
-        dans votre bonheur gustatif (et on applaudit ça 👏).<br><br>
-        Avec <span class="text-4xl font-bold text-green-600">${slide.fidelities}</span> points de fidélité 
-        et <span class="text-4xl font-bold text-green-600">${slide.discountSaved}€</span> d’économies,<br>
-        vous êtes presque prêt(e) à devenir ministre de l'Économie... gastronomique. 💶🍲
+        ${slide.combinedText}
       </p>
     `;
     slidesContainer.appendChild(element);
@@ -625,14 +659,14 @@ function initializeSlideshow(slides) {
   }
 
   /**
-   * Slide Dessert Favori
+   * Favorite Dessert Slide
    */
   function renderFavoriteDessertSlide(slide) {
     const dessertElement = document.createElement("div");
     dessertElement.classList.add("flex", "flex-col", "items-center");
 
     if (slide.favoriteDessert.count === 0) {
-      // Cas où aucun dessert n'a été commandé
+      // Case where no dessert was ordered
       dessertElement.innerHTML = `<p class="text-lg">${slide.noDessertText}</p>`;
       slidesContainer.appendChild(dessertElement);
       updateNavigation();
@@ -645,7 +679,7 @@ function initializeSlideshow(slides) {
   }
 
   /**
-   * Slide standard (intro, conclusion, ou toute slide simple).
+   * Standard Slide (intro, conclusion, or any simple slide).
    */
   function renderStandardSlide(slide) {
     const slideElement = document.createElement("div");
@@ -670,7 +704,7 @@ function initializeSlideshow(slides) {
     slideElement.innerHTML = innerHTML;
     slidesContainer.appendChild(slideElement);
 
-    // Animation de fade-in
+    // Fade-in animation
     requestAnimationFrame(() => {
       slideElement.classList.remove("opacity-0");
       slideElement.classList.add("opacity-100");
@@ -684,7 +718,7 @@ function initializeSlideshow(slides) {
   }
 
   /**
-   * Gère l'action du bouton "Commencer" dans la slide d'intro.
+   * Handles the "Start" button action on the intro slide.
    */
   function handleIntroSlide() {
     navButtons.classList.add("hidden");
@@ -703,19 +737,19 @@ function initializeSlideshow(slides) {
   }
 
   /**
-   * Met à jour l'affichage des boutons et la barre de progression.
+   * Updates the display of navigation buttons and the progress bar.
    */
   function updateNavigation() {
     updateProgressBar();
 
-    // Affiche le bouton "Précédent" sauf sur la slide d'intro
+    // Show the "Previous" button except on the intro slide
     if (currentSlide > 0) {
       prevButton.classList.remove("hidden");
     } else {
       prevButton.classList.add("hidden");
     }
 
-    // Gère l'affichage du bouton "Suivant"
+    // Manage the display of the "Next" button
     if (currentSlide === slides.length - 1) {
       nextButton.classList.add("hidden");
     } else {
@@ -723,16 +757,25 @@ function initializeSlideshow(slides) {
     }
   }
 
+  /**
+   * Updates the progress bar based on the current slide.
+   */
   function updateProgressBar() {
     const progress = (currentSlide / (slides.length - 1)) * 100;
     progressBar.style.width = progress + "%";
   }
 
+  /**
+   * Starts the automatic slideshow playback.
+   */
   function startAutoPlay() {
     if (interval !== null) return;
     interval = setInterval(nextSlide, slideDuration);
   }
 
+  /**
+   * Stops the automatic slideshow playback.
+   */
   function stopAutoPlay() {
     if (interval !== null) {
       clearInterval(interval);
@@ -740,6 +783,9 @@ function initializeSlideshow(slides) {
     }
   }
 
+  /**
+   * Advances to the next slide.
+   */
   function nextSlide() {
     currentSlide++;
     if (currentSlide >= slides.length) {
@@ -750,13 +796,16 @@ function initializeSlideshow(slides) {
     showSlide(currentSlide);
   }
 
+  /**
+   * Goes back to the previous slide.
+   */
   function prevSlide() {
     currentSlide--;
     if (currentSlide < 0) currentSlide = 0;
     showSlide(currentSlide);
   }
 
-  // Événements des boutons de navigation
+  // Event listeners for navigation buttons
   nextButton.addEventListener("click", () => {
     stopAutoPlay();
     nextSlide();
@@ -769,6 +818,6 @@ function initializeSlideshow(slides) {
     startAutoPlay();
   });
 
-  // Affiche la première slide
+  // Display the first slide
   showSlide(currentSlide);
 }

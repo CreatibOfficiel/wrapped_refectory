@@ -1,4 +1,3 @@
-// popup.js
 document.addEventListener("DOMContentLoaded", () => {
   const statusElem = document.getElementById("status");
   const orderCountElem = document.getElementById("order-count");
@@ -23,20 +22,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isFetching) {
       statusElem.innerHTML =
-        "🎉 Votre Wrapped 2024 sur Refectory est presque là !";
+        "⏱️ Tic, tac, tic, tac... Votre Wrapped 2024 sur Refectory est presque là !";
       toggleButton.disabled = true;
       buttonText.textContent = "Analyse en cours...";
       buttonLoader.classList.remove("hidden");
+    } else if (fetchedOrdersCount > 0 && !isFetching) {
+      statusElem.innerHTML =
+        "🎉 Votre Wrapped 2024 sur Refectory est disponible !"
+      toggleButton.disabled = false;
+      buttonText.textContent = "Relancer l'analyse";
+      buttonLoader.classList.add("hidden");
     } else {
       statusElem.innerHTML =
         "Prêt à découvrir votre Wrapped 2024 sur Refectory ?";
       toggleButton.disabled = false;
-      buttonText.textContent = "Démarrer l'analyse";
+      buttonText.textContent = "Lancer l'analyse";
       buttonLoader.classList.add("hidden");
     }
 
     if (fetchedOrdersCount > 0) {
-      orderCountElem.textContent = `${fetchedOrdersCount} commandes`;
+      orderCountElem.textContent = `${fetchedOrdersCount} commandes analysées`;
       orderCountElem.classList.remove("hidden");
     } else {
       orderCountElem.classList.add("hidden");

@@ -166,13 +166,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       setFetchingState(false);
       console.log("Fetching of orders completed (reported by content).");
 
-      // 1) Recharger l'onglet analysé s'il existe
-      if (analysedTabId) {
-        console.log(`Reloading analysed tab with ID: ${analysedTabId}`);
-        chrome.tabs.reload(analysedTabId);
-      }
-
-      // 2) Ouvrir les onglets internes
+      // Ouvrir les onglets internes
       const urlsToOpen = [
         // chrome.runtime.getURL("src/pages/commands-extracted.html"),
         chrome.runtime.getURL("src/pages/index.html"),
@@ -182,13 +176,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         chrome.tabs.create({ url: url });
       });
 
-      // 3) Réinitialiser extractedOrders, fetchedOrdersCount, etc.
-      updateExtractedOrders([]);
-      updateOrderCount(0);
-      updateAnalysedTabId(null);
-
-      // 4) Notifier la popup
+      // Notifier la popup
       sendMessageToPopup({ action: "fetchingCompleted" });
+
+      // Recharger l'onglet analysé s'il existe
+      if (analysedTabId) {
+        console.log(`Reloading analysed tab with ID: ${analysedTabId}`);
+        chrome.tabs.reload(analysedTabId);
+      }
       break;
 
     case "startFetchingOrders":
@@ -212,7 +207,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case "getOrders":
       // Retourne les commandes extraites + la langue
-      sendResponse({ data: extractedOrders, language: pageLanguage });
+      sendResponse({ orders: extractedOrders, language: pageLanguage });
       break;
 
     case "isFetching":
@@ -265,6 +260,12 @@ async function fetchOrders() {
       return;
     }
 
+    // Injecter le script content.js
+    await chrome.scripting.executeScript({
+      target: { tabId: activeTab.id },
+      files: ["src/content/content.js"],
+    });
+
     console.log(`Onglet actif pour la récupération : ${activeTab.id}`);
     updateAnalysedTabId(activeTab.id);
 
@@ -284,7 +285,7 @@ async function fetchOrders() {
         }
 
         // EXTRAIRE LES COMMANDES ET LA LANGUE
-        const orders = response?.data || [];
+        const orders = response?.orders || [];
         const lang = response?.language || null;
 
         console.log(`Commandes récupérées : ${orders.length}`);

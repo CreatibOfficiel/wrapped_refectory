@@ -251,31 +251,34 @@
       total_due: null,
       discounts: [],
     };
-
+  
     const totalSections = orderCard.querySelectorAll(
-      ".c-order-detail-totals__section"
+      ".c-shared-totals__section"
     );
+  
     totalSections.forEach((section) => {
-      const totalItems = section.querySelectorAll(".c-order-detail-total-item");
+      const totalItems = section.querySelectorAll(".c-shared-total-item");
       totalItems.forEach((item) => {
         const labelElem = item.querySelector(
-          ".c-order-detail-total-item__label"
+          ".c-shared-total-item__label"
         );
         const label = labelElem
           ? labelElem.innerText.trim().toLowerCase()
           : null;
+        console.log("Label trouvé :", label);
         const priceElem = item.querySelector(
-          ".c-order-detail-total-item__price"
+          ".c-shared-total-item__price, .c-shared-total-item__price--free, .c-shared-total-item__price--loyalty, .c-shared-total-item__price--information"
         );
+        console.log("Prix trouvé :", priceElem);
         const priceText = priceElem ? priceElem.innerText.trim() : null;
-
+  
         if (priceText) {
           // On parse le prix
           const parsedPrice = parsePrice(priceText);
-
+  
           // Vérification en fonction du label
           if (label) {
-            if (label.includes("livraison")) {
+            if (label.includes("delivery") || label.includes("livraison")) {
               totals.delivery = priceText;
             } else if (
               label.includes("points fidélité") ||
@@ -283,13 +286,13 @@
             ) {
               totals.points_fidelity = priceText;
             } else if (
-              label.includes("total à payer") ||
+              label.includes("total due") ||
               label.includes("total")
             ) {
               totals.total_due = parsedPrice;
             } else if (
-              label.includes("réduction") ||
-              label.includes("discount")
+              label.includes("discount") ||
+              label.includes("réduction")
             ) {
               if (parsedPrice < 0) {
                 totals.discounts.push(parsedPrice);
@@ -309,7 +312,7 @@
         }
       });
     });
-
+  
     return totals;
   }
 
@@ -320,14 +323,19 @@
    */
   function parsePromoCode(orderCard) {
     const promoSection = orderCard.querySelector(
-      ".c-order-detail-totals__section-title"
+      ".c-shared-totals__section-title"
     );
     if (promoSection) {
-      // Récupère le texte à l'intérieur de la section promo
-      const promoCode = promoSection.innerText.trim();
-      console.log("Section promo trouvée :", promoSection);
-      console.log("Code promo trouvé :", promoCode);
-      return promoCode || null;
+      // Vérifie que le label correspond à un code promo
+      const parentItem = promoSection.closest(".c-shared-total-item");
+      if (parentItem) {
+        const label = parentItem.querySelector(".c-shared-total-item__label");
+        if (label && (label.innerText.toLowerCase().includes("code") || label.innerText.toLowerCase().includes("promo"))) {
+          // Récupère le code promo
+          const promoCode = promoSection.innerText.trim();
+          return promoCode || null;
+        }
+      }
     }
     return null;
   }
@@ -379,7 +387,7 @@
     // Parse produits
     const products = [];
     const productSections = orderCard.querySelectorAll(
-      ".c-cart-detail-section__products"
+      ".c-cart-detail-products, .c-shared-section__products"
     );
     productSections.forEach((section) => {
       const productElems = section.querySelectorAll(".c-cart-detail-product");
@@ -525,7 +533,7 @@
     let sameDateCount = 0;
     let isFetching = true; // Flag local pour arrêter le processus si nécessaire
 
-    // RÉCUPÉRER LA LANGUE AVANT (ou après, peu importe, c'est global)
+    // RÉCUPÉRER LA LANGUE DE LA PAGE
     const languageOnPage = getGlobalPageLanguage();
 
     while (keepLoading && isFetching) {
@@ -588,15 +596,15 @@
       // Exécuter le processus de récupération des commandes + la langue
       fetchAllOrdersAndLanguage()
         .then(({ orders, language }) => {
-          // On renvoie data ET la langue
-          sendResponse({ data: orders, language });
+          // On renvoie orders ET la langue
+          sendResponse({ orders: orders, language });
         })
         .catch((error) => {
           console.error(
             "Erreur lors de la récupération des commandes :",
             error
           );
-          sendResponse({ data: [], error: error.message });
+          sendResponse({ orders: [], error: error.message });
         });
 
       // Indique que la réponse sera envoyée de manière asynchrone
