@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Wrapped 2024 sur Refectory",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Redécouvrez votre année 2024 sur Refectory",
   "permissions": ["activeTab", "storage", "scripting"],
   "host_permissions": [

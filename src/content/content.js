@@ -340,10 +340,11 @@
   }
 
   /**
-   * Parse une carte de commande individuelle et renvoie un objet représentant la commande ou null si non parsable.
+   * Parse une carte de commande individuelle et renvoie un objet représentant la commande
+   * ou un objet spécial si elle est d'une année à ignorer (plus récente que 2024) ou plus ancienne que 2024.
    * @param {Element} orderCard
    * @param {number} currentYear
-   * @returns {object|null} L'objet commande ou null.
+   * @returns {object|null} L'objet commande ou { oldYearDetected/futureYearDetected: true, fullDate }.
    */
   function parseOrderCard(orderCard, currentYear) {
     if (orderCard.getAttribute("data-processed") === "true") {
@@ -363,11 +364,27 @@
     }
 
     const { year, month, day, fullDate, hour } = dateData;
-    if (year !== currentYear) {
-      // On a trouvé une commande d'une année antérieure, on arrête le traitement plus haut dans la logique.
-      return { oldYearDetected: true, fullDate };
+
+    // --- LOGIQUE SPÉCIFIQUE ---
+    // 1) Si la commande est d'une année plus grande que currentYear (ex: 2025 > 2024),
+    //    on la "charge" pour continuer à défiler, mais on ne l'ajoute PAS dans le tableau.
+    if (year > currentYear) {
+      return {
+        futureYearDetected: true, // On sait qu'on ne doit pas l'ajouter
+        fullDate,
+      };
     }
 
+    // 2) Si la commande est d'une année inférieure à currentYear (ex: 2023 < 2024),
+    //    on arrête tout (comme avant).
+    if (year < currentYear) {
+      return {
+        oldYearDetected: true, // On arrêtera la boucle
+        fullDate,
+      };
+    }
+
+    // 3) Sinon => c'est l'année en cours (2024) => on traite et on l'ajoute
     const isSuccess = orderCard.classList.contains("c-order-card--success");
     // Récupère la section contenant la position de la commande du jour
     const positionSection = orderCard.querySelector(".c-order-card__top");
@@ -464,14 +481,21 @@
           continue;
         }
 
+        // Si la commande est d'une année future (supérieure à 2024), on la skip (on ne l'ajoute pas dans `orders`)
+        if (result.futureYearDetected) {
+          currentLastDate = result.fullDate;
+          // On continue sans rien ajouter au tableau
+          continue;
+        }
+
+        // Si la commande est d'une année plus ancienne que 2024 => on arrête
         if (result.oldYearDetected) {
-          // On a détecté une commande d'une année précédente
           foundOldYear = true;
           currentLastDate = result.fullDate;
           break;
         }
 
-        // result est une commande complète
+        // Sinon => c'est une commande de 2024 => on l'ajoute
         orders.push(result);
         currentLastDate = result.fullDate;
       }
@@ -519,32 +543,33 @@
 
   /**
    * Traite toutes les commandes, en cliquant sur "Afficher plus" jusqu'à ne plus en avoir
-   * ou jusqu'à détecter une année précédente.
+   * ou jusqu'à détecter une année antérieure à 2024.
    *
    * @returns {Promise<{ orders: Array, language: string }>}
    */
   async function fetchAllOrdersAndLanguage() {
-    // const currentYear = new Date().getFullYear();
+    // Dans le contexte : on est le 6 janvier 2025,
+    // mais on force currentYear = 2024 pour respecter la consigne
     const currentYear = 2024;
     let allOrders = [];
     let keepLoading = true;
     let lastProcessedDate = null;
     let sameDateCount = 0;
-    let isFetching = true; // Flag local pour arrêter le processus si nécessaire
 
     // RÉCUPÉRER LA LANGUE DE LA PAGE
     const languageOnPage = getGlobalPageLanguage();
 
-    while (keepLoading && isFetching) {
+    while (keepLoading) {
       console.log("Analyse des commandes affichées...");
       const { orders, foundOldYear, currentLastDate } =
         parseOrders(currentYear);
 
       if (foundOldYear) {
         console.log(
-          "Commandes d'une année précédente détectées, arrêt du chargement."
+          "Commandes d'une année précédente détectées (avant 2024), arrêt du chargement."
         );
-        allOrders = [...allOrders, ...orders]; // Ajout des dernières commandes avant arrêt
+        // On ajoute quand même les dernières commandes 2024 trouvées avant d’arrêter
+        allOrders = [...allOrders, ...orders];
         break;
       }
 
@@ -562,7 +587,7 @@
         sameDateCount = 0;
         lastProcessedDate = currentLastDate;
         allOrders = [...allOrders, ...orders];
-        console.log(`Commandes récupérées : ${orders.length}`);
+        console.log(`Commandes récupérées sur ce lot : ${orders.length}`);
 
         // Envoyer une mise à jour pour chaque lot de commandes récupérées
         chrome.runtime.sendMessage({
@@ -571,6 +596,7 @@
         });
       }
 
+      // On tente de cliquer sur "Afficher plus"
       keepLoading = await clickShowMore();
     }
 
